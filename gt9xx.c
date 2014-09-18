@@ -523,7 +523,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	memset(ts, 0, sizeof(*ts));
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
-	//ts->irq_lock = SPIN_LOCK_UNLOCKED;
 	ts->gtp_rawdiff_mode = 0;
 
 	ret = gtp_i2c_test(client);
@@ -552,9 +551,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	ret = gtp_read_version(client, &version_info);
 	if (ret < 0)
 		GTP_ERROR("Read version failed.");
-
-	//spin_lock_init(&ts->irq_lock);
-	//ts->irq_lock = SPIN_LOCK_UNLOCKED;
 
 	enable_irq(ts->client->irq);
 
