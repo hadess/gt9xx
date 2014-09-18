@@ -44,7 +44,6 @@ struct goodix_ts_data {
 #define GTP_CHANGE_X2Y		1
 
 #define GTP_DEBUG_ON		0
-#define GTP_DEBUG_FUNC_ON	0
 
 #define GTP_IRQ_TAB		{IRQ_TYPE_EDGE_RISING, \
 				 IRQ_TYPE_EDGE_FALLING, \
@@ -76,10 +75,6 @@ struct goodix_ts_data {
 #define GTP_DEBUG(fmt,arg...)		do{\
 						if(GTP_DEBUG_ON)\
 							printk("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
-					}while(0)
-#define GTP_DEBUG_FUNC()		do{\
-						if(GTP_DEBUG_FUNC_ON)\
-							printk("<<-GTP-FUNC->> Func:%s@Line:%d\n",__func__,__LINE__);\
 					}while(0)
 #define GTP_SWAP(x, y)			do{\
 						typeof(x) z = x;\
@@ -113,8 +108,6 @@ s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 	struct i2c_msg msgs[2];
 	s32 ret=-1;
 	s32 retries = 0;
-
-	GTP_DEBUG_FUNC();
 
 	msgs[0].flags = !I2C_M_RD;
 	msgs[0].addr  = client->addr;
@@ -152,8 +145,6 @@ s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
 	struct i2c_msg msg;
 	s32 ret=-1;
 	s32 retries = 0;
-
-	GTP_DEBUG_FUNC();
 
 	msg.flags = !I2C_M_RD;
 	msg.addr  = client->addr;
@@ -240,8 +231,6 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	s32 i  = 0;
 	s32 ret = -1;
 
-	GTP_DEBUG_FUNC();
-
 	ret = gtp_i2c_read(ts->client, point_data, 12);
 	if (ret < 0) {
 		/* If touchscreen is reset for any reason, the i2c address maybe changed */
@@ -326,8 +315,6 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 {
 	struct goodix_ts_data *ts = dev_id;
 
-	GTP_DEBUG_FUNC();
-
 	goodix_ts_work_func(ts);
 
 	return IRQ_HANDLED;
@@ -370,8 +357,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 		return 0;
 	}
 
-	GTP_DEBUG_FUNC();
-
 	ts->abs_x_max = (config[RESOLUTION_LOC + 1] << 8) + config[RESOLUTION_LOC];
 	ts->abs_y_max = (config[RESOLUTION_LOC + 3] << 8) + config[RESOLUTION_LOC + 2];
 	ts->int_trigger_type = (config[TRIGGER_LOC]) & 0x03;
@@ -407,8 +392,6 @@ s32 gtp_read_version(struct i2c_client *client, u16* version)
 	s32 i = 0;
 	u8 buf[8] = {GTP_REG_VERSION >> 8, GTP_REG_VERSION & 0xff};
 
-	GTP_DEBUG_FUNC();
-
 	ret = gtp_i2c_read(client, buf, sizeof(buf));
 	if (ret < 0) {
 		GTP_ERROR("GTP read version failed");
@@ -443,8 +426,6 @@ static s8 gtp_i2c_test(struct i2c_client *client)
 	u8 test[3] = {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
 	u8 retry = 0;
 	s8 ret = -1;
-
-	GTP_DEBUG_FUNC();
 
 	while(retry++ < 2) {
 		ret = gtp_i2c_read(client, test, 3);
@@ -503,8 +484,6 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 	s8 ret = -1;
 	s8 phys[32];
 
-	GTP_DEBUG_FUNC();
-
 	ts->input_dev = input_allocate_device();
 	if (ts->input_dev == NULL) {
 		GTP_ERROR("Failed to allocate input device.");
@@ -557,8 +536,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	s32 ret = -1;
 	struct goodix_ts_data *ts;
 	u16 version_info;
-
-	GTP_DEBUG_FUNC();
 
 	//do NOT remove these output log
 	GTP_INFO("GTP Driver Version:%s",GTP_DRIVER_VERSION);
@@ -625,8 +602,6 @@ Output:
 static int goodix_ts_remove(struct i2c_client *client)
 {
 	struct goodix_ts_data *ts = i2c_get_clientdata(client);
-
-	GTP_DEBUG_FUNC();
 
 	free_irq(client->irq, ts);
 
