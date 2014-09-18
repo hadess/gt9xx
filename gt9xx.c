@@ -866,7 +866,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 {
     s32 ret = -1;
     struct goodix_ts_data *ts;
-    struct  goodix_9110_platform_data  *gt9110_platform_data;  
     u16 version_info;
 
     GTP_DEBUG_FUNC();
@@ -1060,8 +1059,15 @@ static void gtp_esd_check_func(struct work_struct *work)
 
 static const struct i2c_device_id goodix_ts_id[] = {
     { GTP_I2C_NAME, 0 },
+    { "GDIX1001:00", 0 },
     { }
 };
+
+static const struct acpi_device_id goodix_acpi_match[] = {
+	{ "GDIX1001", 0 },
+	{ }
+};
+MODULE_DEVICE_TABLE(acpi, goodix_acpi_match);
 
 static struct i2c_driver goodix_ts_driver = {
     .probe      = goodix_ts_probe,
@@ -1070,6 +1076,7 @@ static struct i2c_driver goodix_ts_driver = {
     .driver = {
         .name     = GTP_I2C_NAME,
         .owner    = THIS_MODULE,
+	.acpi_match_table = goodix_acpi_match,
     },
 };
 
