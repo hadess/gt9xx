@@ -34,11 +34,11 @@
 
 struct goodix_ts_data {
 	struct i2c_client *client;
-	struct input_dev  *input_dev;
+	struct input_dev *input_dev;
 	u16 abs_x_max;
 	u16 abs_y_max;
-	u8  max_touch_num;
-	u8  int_trigger_type;
+	u8 max_touch_num;
+	u8 int_trigger_type;
 };
 
 #define GTP_CHANGE_X2Y		1
@@ -73,7 +73,7 @@ struct goodix_ts_data {
 #define GTP_INFO(fmt,arg...)		printk("<<-GTP-INFO->> "fmt"\n",##arg)
 #define GTP_ERROR(fmt,arg...)		printk("<<-GTP-ERROR->> "fmt"\n",##arg)
 #define GTP_DEBUG(fmt,arg...)		do{\
-						if(GTP_DEBUG_ON)\
+						if (GTP_DEBUG_ON)\
 							printk("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
 					}while(0)
 #define GTP_SWAP(x, y)			do{\
@@ -84,7 +84,7 @@ struct goodix_ts_data {
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 static u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
-				= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
+		= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
 
 /*******************************************************
 Function:
@@ -115,9 +115,10 @@ static s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 	msgs[1].len   = len - GTP_ADDR_LENGTH;
 	msgs[1].buf   = &buf[GTP_ADDR_LENGTH];
 
-	while(retries < 1) {
+	while (retries < 1) {
 		ret = i2c_transfer(client->adapter, msgs, 2);
-		if(ret == 2)break;
+		if (ret == 2)
+			break;
 		retries++;
 	}
 	return ret;
@@ -169,7 +170,7 @@ Input:
 Output:
 	None.
 *******************************************************/
-static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
+static void gtp_touch_down(struct goodix_ts_data* ts, s32 id, s32 x, s32 y, s32 w)
 {
 #if GTP_CHANGE_X2Y
 	GTP_SWAP(x, y);
@@ -214,8 +215,10 @@ Output:
 *******************************************************/
 static void goodix_ts_work_func(struct goodix_ts_data *ts)
 {
-	u8  end_cmd[3] = {GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF, 0};
-	u8  point_data[2 + 1 + 8 * GTP_MAX_TOUCH + 1]={GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF};
+	u8  end_cmd[3] = {
+			GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF, 0};
+	u8  point_data[2 + 1 + 8 * GTP_MAX_TOUCH + 1] = {
+			GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF};
 	u8  touch_num = 0;
 	u8  finger = 0;
 	static u16 pre_touch = 0;
@@ -230,7 +233,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	ret = gtp_i2c_read(ts->client, point_data, 12);
 	if (ret < 0) {
 		/* If touchscreen is reset for any reason, the i2c address maybe changed */
-		if(ts->client->addr == 0x14)
+		if (ts->client->addr == 0x14)
 			ts->client->addr = 0x5d;
 		else
 			ts->client->addr = 0x14;
@@ -240,7 +243,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	}
 
 	finger = point_data[GTP_ADDR_LENGTH];
-	if((finger & 0x80) == 0)
+	if ((finger & 0x80) == 0)
 		goto exit_work_func;
 
 	touch_num = finger & 0x0f;
@@ -261,7 +264,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 		u16 touch_index = 0;
 
 		coor_data = &point_data[3];
-		if(touch_num) {
+		if (touch_num) {
 			id = coor_data[pos] & 0x0F;
 			touch_index |= (0x01<<id);
 		}
@@ -383,7 +386,7 @@ static s32 gtp_read_version(struct i2c_client *client, u16* version)
 		*version = (buf[7] << 8) | buf[6];
 
 	for(i=2; i<6; i++) {
-		if(!buf[i])
+		if (!buf[i])
 			buf[i] = 0x30;
 	}
 	GTP_INFO("IC VERSION:%c%c%c%c_%02x%02x",
@@ -436,11 +439,11 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 
 	GTP_DEBUG("INT trigger type:%x", ts->int_trigger_type);
 
-	ret  = request_threaded_irq(ts->client->irq, NULL,
-				    goodix_ts_irq_handler,
-				    irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
-				    ts->client->name,
-				    ts);
+	ret = request_threaded_irq(ts->client->irq, NULL,
+				   goodix_ts_irq_handler,
+				   irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
+				   ts->client->name,
+				   ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
 		return -1;
