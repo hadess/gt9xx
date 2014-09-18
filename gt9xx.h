@@ -60,7 +60,6 @@ extern u16 total_len;
 #define GTP_POWER_CTRL_SLEEP  0
 #define GTP_AUTO_UPDATE       0
 #define GTP_CHANGE_X2Y        1
-#define GTP_ESD_PROTECT       0
 
 #define GTP_DEBUG_ON          0
 #define GTP_DEBUG_FUNC_ON     0

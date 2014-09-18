@@ -41,12 +41,6 @@ void gtp_int_sync(s32 ms);
 extern u8 gup_init_update_proc(struct goodix_ts_data *);
 #endif
 
-#if GTP_ESD_PROTECT
-static struct delayed_work gtp_esd_check_work;
-static struct workqueue_struct * gtp_esd_check_workqueue = NULL;
-static void gtp_esd_check_func(struct work_struct *);
-#endif
-
 /*******************************************************
 Function:
 	Read data from the i2c slave device.
@@ -634,12 +628,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 
 	gtp_irq_enable(ts);
 
-#if GTP_ESD_PROTECT
-	INIT_DELAYED_WORK(&gtp_esd_check_work, gtp_esd_check_func);
-	gtp_esd_check_workqueue = create_workqueue("gtp_esd_check");
-	queue_delayed_work(gtp_esd_check_workqueue, &gtp_esd_check_work, GTP_ESD_CHECK_CIRCLE);
-#endif
-
 	return 0;
 }
 
@@ -660,10 +648,6 @@ static int goodix_ts_remove(struct i2c_client *client)
 
 	GTP_DEBUG_FUNC();
 
-#if GTP_ESD_PROTECT
-	destroy_workqueue(gtp_esd_check_workqueue);
-#endif
-
 	free_irq(client->irq, ts);
 
 	GTP_INFO("GTP driver is removing...");
@@ -673,35 +657,6 @@ static int goodix_ts_remove(struct i2c_client *client)
 
 	return 0;
 }
-
-#if GTP_ESD_PROTECT
-static void gtp_esd_check_func(struct work_struct *work)
-{
-	s32 i;
-	s32 ret = -1;
-	struct goodix_ts_data *ts = NULL;
-	u8 test[3] = {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
-
-	GTP_DEBUG_FUNC();
-
-	ts = i2c_get_clientdata(i2c_connect_client);
-
-	if (ts->gtp_is_suspend) {
-		return;
-	}
-
-	for (i = 0; i < 3; i++) {
-		ret = gtp_i2c_read(i2c_connect_client, test, 3);
-		if (ret >= 0)
-			break;
-	}
-
-	if(!ts->gtp_is_suspend)
-		queue_delayed_work(gtp_esd_check_workqueue, &gtp_esd_check_work, GTP_ESD_CHECK_CIRCLE);
-
-	return;
-}
-#endif
 
 static const struct i2c_device_id goodix_ts_id[] = {
 	{ GTP_I2C_NAME, 0 },
