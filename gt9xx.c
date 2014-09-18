@@ -352,7 +352,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 		ts->abs_y_max = GTP_MAX_HEIGHT;
 	}
 
-
 	msleep(500);
 
 	GTP_DEBUG("X_MAX = %d,Y_MAX = %d,TRIGGER = 0x%02x",
@@ -523,7 +522,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	//do NOT remove these output log
 	GTP_INFO("GTP Driver Version:%s",GTP_DRIVER_VERSION);
 	GTP_INFO("GTP I2C Address:0x%02x", client->addr);
 
