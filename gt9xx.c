@@ -163,7 +163,6 @@ s32 gtp_send_cfg(struct i2c_client *client)
     
 #if  GTP_DRIVER_SEND_CFG
     s32 retry = 0;
-    s32 i;
 
     for (retry = 0; retry < 5; retry++)
     {
@@ -190,7 +189,7 @@ Output:
 *******************************************************/
 void gtp_irq_disable(struct goodix_ts_data *ts)
 {
-    unsigned long irqflags;
+    //unsigned long irqflags;
 
     GTP_DEBUG_FUNC();
 
@@ -215,7 +214,7 @@ Output:
 *******************************************************/
 void gtp_irq_enable(struct goodix_ts_data *ts)
 {
-    unsigned long irqflags = 0;
+    //unsigned long irqflags = 0;
 
     GTP_DEBUG_FUNC();
     
@@ -751,21 +750,6 @@ static s8 gtp_i2c_test(struct i2c_client *client)
         msleep(10);
     }
     return ret;
-}
-
-/*******************************************************
-Function:
-	Request gpio Function.
-
-Input:
-	ts:private data.
-	
-Output:
-	Executive outcomes.0--success,non-0--fail.
-*******************************************************/
-static s8 gtp_request_io_port(struct goodix_ts_data *ts)
-{
-
 }
 
 /*******************************************************
