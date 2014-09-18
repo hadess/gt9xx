@@ -787,9 +787,11 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
     else 
     {
     	GTP_GPIO_AS_INPUT(gt9110_int_number);
-    	gpio_pull_updown(ts->client->irq, PullDisable);
+    	//gpio_pull_updown(ts->client->irq, PullDisable);
         gtp_irq_disable(ts);
         ts->use_irq = 1;
+        // XXX Use http://www.cs.fsu.edu/~baker/devices/lxr/http/source/linux/Documentation/gpio.txt#L290 ?
+        GTP_ERROR("Don't know how to disable IRQ");
         return 0;
     }
 }
