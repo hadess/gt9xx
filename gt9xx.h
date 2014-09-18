@@ -45,42 +45,27 @@ struct goodix_ts_data {
     u16 abs_y_max;
     u8  max_touch_num;
     u8  int_trigger_type;
-    u8  green_wake_mode;
-    u8  chip_type;
-    u8  enter_update;
-    u8  gtp_is_suspend;
     u8  gtp_rawdiff_mode;
     u8  gtp_cfg_len;
 };
 
-extern u16 show_len;
-extern u16 total_len;
-
 //***************************PART1:ON/OFF define*******************************
-#define GTP_POWER_CTRL_SLEEP  0
 #define GTP_CHANGE_X2Y        1
 
 #define GTP_DEBUG_ON          0
 #define GTP_DEBUG_FUNC_ON     0
 
 //STEP_2(REQUIRED):Change I/O define & I/O operation mode.
-#define GTP_RST_PORT    312
-#define GTP_INT_PORT    irq_to_gpio(306)
-#define GTP_INT_IRQ     306
-#define GTP_INT_CFG     //S3C_GPIO_SFN(0xF)
-
 #define GTP_IRQ_TAB                     {IRQ_TYPE_EDGE_RISING, IRQ_TYPE_EDGE_FALLING, IRQ_TYPE_LEVEL_LOW, IRQ_TYPE_LEVEL_HIGH}
 
 #define GTP_MAX_HEIGHT   4096
 #define GTP_MAX_WIDTH    4096
 #define GTP_INT_TRIGGER  1
 #define GTP_MAX_TOUCH         10
-#define GTP_ESD_CHECK_CIRCLE  2000
 
 //***************************PART3:OTHER define*********************************
 #define GTP_DRIVER_VERSION    "V1.2<2012/10/25>"
 #define GTP_I2C_NAME          "Goodix9110-TS"
-#define GTP_POLL_TIME         10
 #define GTP_ADDR_LENGTH       2
 #define GTP_CONFIG_MAX_LENGTH 240
 #define FAIL                  0
@@ -113,23 +98,6 @@ extern u16 total_len;
                                          y = z;\
                                        }while (0)
 
-//****************************PART4:UPDATE define*******************************
-//Error no
-#define ERROR_NO_FILE           2   //ENOENT
-#define ERROR_FILE_READ         23  //ENFILE
-#define ERROR_FILE_TYPE         21  //EISDIR
-#define ERROR_GPIO_REQUEST      4   //EINTR
-#define ERROR_I2C_TRANSFER      5   //EIO
-#define ERROR_NO_RESPONSE       16  //EBUSY
-#define ERROR_TIMEOUT           110 //ETIMEDOUT
-
 //*****************************End of Part III********************************
-
-struct goodix_9110_platform_data {
-	int reset;
-	int irq_pin;
-        int power_control;
-};
-
 
 #endif /* _LINUX_GOODIX_TOUCH_H */

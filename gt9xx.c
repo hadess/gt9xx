@@ -234,8 +234,6 @@ static void goodix_ts_work_func(struct work_struct *work)
 	GTP_DEBUG_FUNC();
 
 	ts = container_of(work, struct goodix_ts_data, work);
-	if (ts->enter_update)
-		return;
 
 	ret = gtp_i2c_read(ts->client, point_data, 12);
 	if (ret < 0) {
