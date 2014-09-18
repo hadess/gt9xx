@@ -206,8 +206,8 @@ static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
 	GTP_SWAP(x, y);
 #endif
 
- 	input_mt_slot(ts->input_dev, id);
-	input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, id);
+	input_mt_slot(ts->input_dev, id);
+	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
 	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
 	input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
 	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
@@ -229,7 +229,7 @@ Output:
 static void gtp_touch_up(struct goodix_ts_data* ts, s32 id)
 {
 	input_mt_slot(ts->input_dev, id);
-	input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, -1);
+	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, false);
 	GTP_DEBUG("Touch id[%2d] release!", id);
 }
 
@@ -338,6 +338,7 @@ static void goodix_ts_work_func(struct work_struct *work)
 		}
 	}
 
+	input_mt_sync_frame(ts->input_dev);
 	input_sync(ts->input_dev);
 
 exit_work_func:
