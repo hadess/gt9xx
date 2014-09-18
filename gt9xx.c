@@ -437,11 +437,12 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 
 	GTP_DEBUG("INT trigger type:%x", ts->int_trigger_type);
 
-	ret = request_threaded_irq(ts->client->irq, NULL,
-				   goodix_ts_irq_handler,
-				   irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
-				   ts->client->name,
-				   ts);
+	ret  = devm_request_threaded_irq(&ts->client->dev,
+					 ts->client->irq, NULL,
+					 goodix_ts_irq_handler,
+					 irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
+					 ts->client->name,
+					 ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
 		return -1;
@@ -466,7 +467,7 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 	s8 ret = -1;
 	s8 phys[32];
 
-	ts->input_dev = input_allocate_device();
+	ts->input_dev = devm_input_allocate_device(&ts->client->dev);
 	if (ts->input_dev == NULL) {
 		GTP_ERROR("Failed to allocate input device.");
 		return -ENOMEM;
@@ -526,7 +527,7 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		GTP_ERROR("I2C check functionality failed.");
 		return -ENODEV;
 	}
-	ts = kzalloc(sizeof(*ts), GFP_KERNEL);
+	ts = devm_kzalloc(&client->dev, sizeof(*ts), GFP_KERNEL);
 	if (ts == NULL) {
 		GTP_ERROR("Alloc GFP_KERNEL memory failed.");
 		return -ENOMEM;
@@ -550,16 +551,20 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	gtp_init_panel(ts);
 
 	ret = gtp_request_input_dev(ts);
-	if (ret < 0)
+	if (ret < 0) {
 		GTP_ERROR("GTP request input dev failed");
+		return ret;
+	}
 
 	ret = gtp_request_irq(ts);
 	if (ret < 0)
-		GTP_INFO("GTP error while requesting irq.");
+		return ret;
 
 	ret = gtp_read_version(client, &version_info);
-	if (ret < 0)
+	if (ret < 0) {
 		GTP_ERROR("Read version failed.");
+		return ret;
+	}
 
 	enable_irq(ts->client->irq);
 
@@ -579,14 +584,8 @@ Output:
 *******************************************************/
 static int goodix_ts_remove(struct i2c_client *client)
 {
-	struct goodix_ts_data *ts = i2c_get_clientdata(client);
-
-	free_irq(client->irq, ts);
-
 	GTP_INFO("GTP driver is removing...");
 	i2c_set_clientdata(client, NULL);
-	input_unregister_device(ts->input_dev);
-	kfree(ts);
 
 	return 0;
 }
