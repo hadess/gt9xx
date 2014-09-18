@@ -926,7 +926,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     
     //do NOT remove these output log
     GTP_INFO("GTP Driver Version:%s",GTP_DRIVER_VERSION);
-    GTP_INFO("GTP Driver build@%s,%s", __TIME__,__DATE__);
     GTP_INFO("GTP I2C Address:0x%02x", client->addr);
 
     i2c_connect_client = client;
