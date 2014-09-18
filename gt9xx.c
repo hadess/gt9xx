@@ -1092,7 +1092,7 @@ Input:
 Output:
 	Executive Outcomes. 0---succeed.
 ********************************************************/
-static int __devinit goodix_ts_init(void)
+static int goodix_ts_init(void)
 {
     s32 ret;
 
