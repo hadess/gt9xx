@@ -70,11 +70,11 @@ struct goodix_ts_data {
 #define RESOLUTION_LOC		3
 #define TRIGGER_LOC		8
 
-#define GTP_INFO(fmt,arg...)		printk("<<-GTP-INFO->> "fmt"\n",##arg)
-#define GTP_ERROR(fmt,arg...)		printk("<<-GTP-ERROR->> "fmt"\n",##arg)
+#define GTP_INFO(fmt,arg...)		pr_info("<<-GTP-INFO->> "fmt"\n",##arg)
+#define GTP_ERROR(fmt,arg...)		pr_err("<<-GTP-ERROR->> "fmt"\n",##arg)
 #define GTP_DEBUG(fmt,arg...)		do{\
 						if (GTP_DEBUG_ON)\
-							printk("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
+							pr_debug("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
 					}while(0)
 #define GTP_SWAP(x, y)			do{\
 						typeof(x) z = x;\
