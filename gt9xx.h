@@ -63,8 +63,6 @@ struct goodix_ts_data {
 #define GTP_I2C_NAME		"Goodix9110-TS"
 #define GTP_ADDR_LENGTH		2
 #define GTP_CONFIG_MAX_LENGTH	240
-#define FAIL			0
-#define SUCCESS			1
 
 //Register define
 #define GTP_READ_COOR_ADDR	0x814E
