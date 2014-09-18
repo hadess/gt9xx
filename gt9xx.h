@@ -33,7 +33,7 @@
 #include <linux/vmalloc.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
-#include "gpio.h"
+#include <linux/gpio.h>
 
 struct goodix_ts_data {
     spinlock_t irq_lock;
