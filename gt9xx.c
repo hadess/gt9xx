@@ -329,9 +329,9 @@ Input:
 Output:
 	Executive outcomes.0---succeed.
 *******************************************************/
-static s32 gtp_init_panel(struct goodix_ts_data *ts)
+static void gtp_init_panel(struct goodix_ts_data *ts)
 {
-	s32 ret = -1;
+	s32 ret;
 
 	ret = gtp_i2c_read(ts->client, config, GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH);
 	if (ret < 0) {
@@ -339,7 +339,7 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 		ts->abs_x_max = GTP_MAX_WIDTH;
 		ts->abs_y_max = GTP_MAX_HEIGHT;
 		ts->int_trigger_type = GTP_INT_TRIGGER;
-		return 0;
+		return;
 	}
 
 	ts->abs_x_max = (config[RESOLUTION_LOC + 1] << 8) + config[RESOLUTION_LOC];
@@ -355,8 +355,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 
 	GTP_DEBUG("X_MAX = %d,Y_MAX = %d,TRIGGER = 0x%02x",
 			 ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
-
-	return 0;
 }
 
 /*******************************************************
@@ -549,9 +547,7 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		GTP_INFO("GTP I2C new Address:0x%02x", client->addr);
 	}
 
-	ret = gtp_init_panel(ts);
-	if (ret < 0)
-		GTP_ERROR("GTP init panel failed.");
+	gtp_init_panel(ts);
 
 	ret = gtp_request_input_dev(ts);
 	if (ret < 0)
