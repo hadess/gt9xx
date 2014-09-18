@@ -73,12 +73,6 @@ extern u16 total_len;
 #define GTP_INT_IRQ     306
 #define GTP_INT_CFG     //S3C_GPIO_SFN(0xF)
 
-#define GTP_GPIO_AS_INPUT(pin)          do{\
-                                            gpio_direction_input(pin);\
-                                        }while(0)
-#define GTP_GPIO_AS_INT(pin)            do{\
-                                            GTP_GPIO_AS_INPUT(pin);\
-                                        }while(0)
 #define GTP_GPIO_GET_VALUE(pin)         gpio_get_value(pin)
 #define GTP_GPIO_OUTPUT(pin,level)      gpio_direction_output(pin,level)
 #define GTP_GPIO_REQUEST(pin, label)    gpio_request(pin, label)

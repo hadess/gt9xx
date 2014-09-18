@@ -392,7 +392,7 @@ void gtp_int_sync(s32 ms)
 {
 	//GTP_GPIO_OUTPUT(gt9110_int_number, 0);
 	msleep(ms);
-	//GTP_GPIO_AS_INT(gt9110_int_number);
+	//gpio_direction_input(gt9110_int_number);
 }
 
 /*******************************************************
@@ -417,7 +417,7 @@ void gtp_reset_guitar(struct i2c_client *client, s32 ms)
 	GTP_GPIO_OUTPUT(gt9110_reset_number, 1);
 
 	msleep(6);				//must > 3ms
-	GTP_GPIO_AS_INPUT(gt9110_int_number);	//end select I2C slave addr
+	gpio_direction_input(gt9110_int_number);	//end select I2C slave addr
 
 	gtp_int_sync(50);
 }
@@ -562,7 +562,7 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 			   ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
-		GTP_GPIO_AS_INPUT(gt9110_int_number);
+		gpio_direction_input(gt9110_int_number);
 		GTP_GPIO_FREE(gt9110_int_number);
 
 		hrtimer_init(&ts->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
@@ -570,7 +570,7 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 		hrtimer_start(&ts->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 		return -1;
 	} else {
-		GTP_GPIO_AS_INPUT(gt9110_int_number);
+		gpio_direction_input(gt9110_int_number);
 		//gpio_pull_updown(ts->client->irq, PullDisable);
 		gtp_irq_disable(ts);
 		ts->use_irq = 1;
@@ -759,7 +759,7 @@ static int goodix_ts_remove(struct i2c_client *client)
 
 	if (ts) {
 		if (ts->use_irq) {
-			GTP_GPIO_AS_INPUT(gt9110_int_number);
+			gpio_direction_input(gt9110_int_number);
 			GTP_GPIO_FREE(gt9110_int_number);
 			free_irq(client->irq, ts);
 		} else {
