@@ -317,29 +317,7 @@ exit_work_func:
 			GTP_INFO("I2C write end_cmd  error!");
 	}
 
-	if (ts->use_irq)
-		gtp_irq_enable(ts);
-}
-
-/*******************************************************
-Function:
-	Timer interrupt service routine.
-
-Input:
-	timer:	timer struct pointer.
-
-Output:
-	Timer work mode. HRTIMER_NORESTART---not restart mode
-*******************************************************/
-static enum hrtimer_restart goodix_ts_timer_handler(struct hrtimer *timer)
-{
-	struct goodix_ts_data *ts = container_of(timer, struct goodix_ts_data, timer);
-
-	GTP_DEBUG_FUNC();
-
-	queue_work(goodix_wq, &ts->work);
-	hrtimer_start(&ts->timer, ktime_set(0, (GTP_POLL_TIME+6)*1000000), HRTIMER_MODE_REL);
-	return HRTIMER_NORESTART;
+	gtp_irq_enable(ts);
 }
 
 /*******************************************************
@@ -515,14 +493,10 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 			   ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
-		hrtimer_init(&ts->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-		ts->timer.function = goodix_ts_timer_handler;
-		hrtimer_start(&ts->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 		return -1;
 	}
 
 	gtp_irq_disable(ts);
-	ts->use_irq = 1;
 	return 0;
 }
 
@@ -690,13 +664,7 @@ static int goodix_ts_remove(struct i2c_client *client)
 	destroy_workqueue(gtp_esd_check_workqueue);
 #endif
 
-	if (ts) {
-		if (ts->use_irq) {
-			free_irq(client->irq, ts);
-		} else {
-			hrtimer_cancel(&ts->timer);
-		}
-	}
+	free_irq(client->irq, ts);
 
 	GTP_INFO("GTP driver is removing...");
 	i2c_set_clientdata(client, NULL);

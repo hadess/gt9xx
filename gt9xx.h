@@ -39,10 +39,8 @@ struct goodix_ts_data {
     spinlock_t irq_lock;
     struct i2c_client *client;
     struct input_dev  *input_dev;
-    struct hrtimer timer;
     struct work_struct  work;
     s32 irq_is_disable;
-    s32 use_irq;
     u16 abs_x_max;
     u16 abs_y_max;
     u8  max_touch_num;
