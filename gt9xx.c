@@ -40,11 +40,6 @@ static int gt9110_reset_number;
 static int gt9110_int_number; 
 static int gt915_flag;
 
-#if GTP_HAVE_TOUCH_KEY
-	static const u16 touch_key_array[] = GTP_KEY_TAB;
-	#define GTP_MAX_KEY_NUM	 (sizeof(touch_key_array)/sizeof(touch_key_array[0]))
-#endif
-
 static s8 gtp_i2c_test(struct i2c_client *client);
 void gtp_reset_guitar(struct i2c_client *client, s32 ms);
 void gtp_int_sync(s32 ms);
@@ -312,8 +307,6 @@ static void goodix_ts_work_func(struct work_struct *work)
     u8  touch_num = 0;
     u8  finger = 0;
     static u16 pre_touch = 0;
-    static u8 pre_key = 0;
-    u8  key_value = 0;
     u8* coor_data = NULL;
     s32 input_x = 0;
     s32 input_y = 0;
@@ -363,21 +356,6 @@ static void goodix_ts_work_func(struct work_struct *work)
         ret = gtp_i2c_read(ts->client, buf, 2 + 8 * (touch_num - 1)); 
         memcpy(&point_data[12], &buf[2], 8 * (touch_num - 1));
     }
-
-#if GTP_HAVE_TOUCH_KEY
-    key_value = point_data[3 + 8 * touch_num];
-    
-    if(key_value || pre_key)
-    {
-        for (i = 0; i < GTP_MAX_KEY_NUM; i++)
-        {
-            input_report_key(ts->input_dev, touch_key_array[i], key_value & (0x01<<i));   
-        }
-        touch_num = 0;
-        pre_touch = 0;
-    }
-#endif
-    pre_key = key_value;
 
     GTP_DEBUG("pre_touch:%02x, finger:%02x.", pre_touch, finger);
 
@@ -440,7 +418,8 @@ static void goodix_ts_work_func(struct work_struct *work)
     }
 
     pre_touch = touch_num;
-    input_report_key(ts->input_dev, BTN_TOUCH, (touch_num || key_value));
+    if (touch_num)
+      input_report_key(ts->input_dev, BTN_TOUCH, touch_num);
 #endif
 
     input_sync(ts->input_dev);
@@ -848,9 +827,6 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 {
     s8 ret = -1;
     s8 phys[32];
-#if GTP_HAVE_TOUCH_KEY
-    u8 index = 0;
-#endif
   
     GTP_DEBUG_FUNC();
   
@@ -867,13 +843,6 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
     input_mt_init_slots(ts->input_dev, 255);
 #else
     ts->input_dev->keybit[BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH);
-#endif
-
-#if GTP_HAVE_TOUCH_KEY
-    for (index = 0; index < GTP_MAX_KEY_NUM; index++)
-    {
-        input_set_capability(ts->input_dev,EV_KEY,touch_key_array[index]);	
-    }
 #endif
 
 #if GTP_CHANGE_X2Y
