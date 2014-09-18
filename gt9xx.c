@@ -29,7 +29,6 @@
 #include "gt9xx.h"
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
-static struct workqueue_struct *goodix_wq;
 struct i2c_client * i2c_connect_client = NULL;
 static u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
 				= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
@@ -112,54 +111,6 @@ s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
 
 /*******************************************************
 Function:
-	Enable IRQ Function.
-
-Input:
-	ts:	i2c client private struct.
-
-Output:
-	None.
-*******************************************************/
-void gtp_irq_disable(struct goodix_ts_data *ts)
-{
-	//unsigned long irqflags;
-
-	GTP_DEBUG_FUNC();
-
-	//spin_lock_irqsave(&ts->irq_lock, irqflags);
-	if (!ts->irq_is_disable) {
-		ts->irq_is_disable = 1;
-		disable_irq_nosync(ts->client->irq);
-	}
-	//spin_unlock_irqrestore(&ts->irq_lock, irqflags);
-}
-
-/*******************************************************
-Function:
-	Disable IRQ Function.
-
-Input:
-	ts:	i2c client private struct.
-
-Output:
-	None.
-*******************************************************/
-void gtp_irq_enable(struct goodix_ts_data *ts)
-{
-	//unsigned long irqflags = 0;
-
-	GTP_DEBUG_FUNC();
-
-	//spin_lock_irqsave(&ts->irq_lock, irqflags);
-	if (ts->irq_is_disable) {
-		enable_irq(ts->client->irq);
-		ts->irq_is_disable = 0;
-	}
-	//spin_unlock_irqrestore(&ts->irq_lock, irqflags);
-}
-
-/*******************************************************
-Function:
 	Touch down report function.
 
 Input:
@@ -215,7 +166,7 @@ Input:
 Output:
 	None.
 *******************************************************/
-static void goodix_ts_work_func(struct work_struct *work)
+static void goodix_ts_work_func(struct goodix_ts_data *ts)
 {
 	u8  end_cmd[3] = {GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF, 0};
 	u8  point_data[2 + 1 + 8 * GTP_MAX_TOUCH + 1]={GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF};
@@ -229,11 +180,8 @@ static void goodix_ts_work_func(struct work_struct *work)
 	s32 id = 0;
 	s32 i  = 0;
 	s32 ret = -1;
-	struct goodix_ts_data *ts = NULL;
 
 	GTP_DEBUG_FUNC();
-
-	ts = container_of(work, struct goodix_ts_data, work);
 
 	ret = gtp_i2c_read(ts->client, point_data, 12);
 	if (ret < 0) {
@@ -304,8 +252,6 @@ exit_work_func:
 		if (ret < 0)
 			GTP_INFO("I2C write end_cmd  error!");
 	}
-
-	gtp_irq_enable(ts);
 }
 
 /*******************************************************
@@ -325,8 +271,7 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 
 	GTP_DEBUG_FUNC();
 
-	gtp_irq_disable(ts);
-	queue_work(goodix_wq, &ts->work);
+	goodix_ts_work_func(ts);
 
 	return IRQ_HANDLED;
 }
@@ -474,17 +419,17 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 
 	GTP_DEBUG("INT trigger type:%x", ts->int_trigger_type);
 
-	ret  = request_irq(ts->client->irq,
-			   goodix_ts_irq_handler,
-			   irq_table[ts->int_trigger_type],
-			   ts->client->name,
-			   ts);
+	ret  = request_threaded_irq(ts->client->irq, NULL,
+				    goodix_ts_irq_handler,
+				    irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
+				    ts->client->name,
+				    ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
 		return -1;
 	}
 
-	gtp_irq_disable(ts);
+	disable_irq_nosync(ts->client->irq);
 	return 0;
 }
 
@@ -576,7 +521,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	}
 
 	memset(ts, 0, sizeof(*ts));
-	INIT_WORK(&ts->work, goodix_ts_work_func);
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
 	//ts->irq_lock = SPIN_LOCK_UNLOCKED;
@@ -612,7 +556,7 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	//spin_lock_init(&ts->irq_lock);
 	//ts->irq_lock = SPIN_LOCK_UNLOCKED;
 
-	gtp_irq_enable(ts);
+	enable_irq(ts->client->irq);
 
 	return 0;
 }
@@ -681,11 +625,6 @@ static int goodix_ts_init(void)
 
 	GTP_DEBUG_FUNC();
 	GTP_INFO("GTP driver install.");
-	goodix_wq = create_singlethread_workqueue("goodix_wq");
-	if (!goodix_wq) {
-		GTP_ERROR("Creat workqueue failed.");
-		return -ENOMEM;
-	}
 	ret = i2c_add_driver(&goodix_ts_driver);
 	return ret;
 }
@@ -703,8 +642,6 @@ static void __exit goodix_ts_exit(void)
 	GTP_DEBUG_FUNC();
 	GTP_INFO("GTP driver exited.");
 	i2c_del_driver(&goodix_ts_driver);
-	if (goodix_wq)
-		destroy_workqueue(goodix_wq);
 }
 
 late_initcall(goodix_ts_init);
