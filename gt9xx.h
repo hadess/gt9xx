@@ -1,18 +1,18 @@
 /* drivers/input/touchscreen/gt813_827_828.h
- * 
+ *
  * 2010 - 2012 Goodix Technology.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be a reference 
- * to you, when you are integrating the GOODiX's CTP IC into your system, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+ *
+ * This program is distributed in the hope that it will be a reference
+ * to you, when you are integrating the GOODiX's CTP IC into your system,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * Version:1.0
  *      V1.0:2012/08/31,first release.
  */
@@ -70,7 +70,7 @@ extern u16 total_len;
 //STEP_2(REQUIRED):Change I/O define & I/O operation mode.
 #define GTP_RST_PORT    312
 #define GTP_INT_PORT    irq_to_gpio(306)
-#define GTP_INT_IRQ     306 
+#define GTP_INT_IRQ     306
 #define GTP_INT_CFG     //S3C_GPIO_SFN(0xF)
 
 #define GTP_GPIO_AS_INPUT(pin)          do{\
