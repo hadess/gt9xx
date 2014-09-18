@@ -42,8 +42,6 @@ struct goodix_ts_data {
 	u16 abs_y_max;
 	u8  max_touch_num;
 	u8  int_trigger_type;
-	u8  gtp_rawdiff_mode;
-	u8  gtp_cfg_len;
 };
 
 //***************************PART1:ON/OFF define*******************************

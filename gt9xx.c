@@ -247,11 +247,9 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 
 exit_work_func:
 
-	if(!ts->gtp_rawdiff_mode) {
-		ret = gtp_i2c_write(ts->client, end_cmd, 3);
-		if (ret < 0)
-			GTP_INFO("I2C write end_cmd  error!");
-	}
+	ret = gtp_i2c_write(ts->client, end_cmd, 3);
+	if (ret < 0)
+		GTP_INFO("I2C write end_cmd  error!");
 }
 
 /*******************************************************
@@ -304,10 +302,7 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 {
 	s32 ret = -1;
 
-	if(ts->gtp_cfg_len == 0)
-		ts->gtp_cfg_len = GTP_CONFIG_MAX_LENGTH;
-
-	ret = gtp_i2c_read(ts->client, config, ts->gtp_cfg_len + GTP_ADDR_LENGTH);
+	ret = gtp_i2c_read(ts->client, config, GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH);
 	if (ret < 0) {
 		GTP_ERROR("GTP read resolution & max_touch_num failed, use default value!");
 		ts->abs_x_max = GTP_MAX_WIDTH;
@@ -524,7 +519,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	memset(ts, 0, sizeof(*ts));
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
-	ts->gtp_rawdiff_mode = 0;
 
 	ret = gtp_i2c_test(client);
 	if (ret < 0) {
