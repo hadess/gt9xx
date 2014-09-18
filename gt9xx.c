@@ -24,11 +24,9 @@
 
 #include <linux/irq.h>
 #include <linux/slab.h>
-#include "gt9xx.h"
+#include <linux/input/mt.h>
 
-#if GTP_ICS_SLOT_REPORT
-    #include <linux/input/mt.h>
-#endif
+#include "gt9xx.h"
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 static struct workqueue_struct *goodix_wq;
@@ -38,7 +36,6 @@ static u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
                 
 static int gt9110_reset_number;
 static int gt9110_int_number; 
-static int gt915_flag;
 
 static s8 gtp_i2c_test(struct i2c_client *client);
 void gtp_reset_guitar(struct i2c_client *client, s32 ms);
@@ -239,21 +236,12 @@ static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
     GTP_SWAP(x, y);
 #endif
 
-#if GTP_ICS_SLOT_REPORT
     input_mt_slot(ts->input_dev, id);
     input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, id);
     input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
     input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
     input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
     input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
-#else
-    input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
-    input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
-    input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
-    input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
-    input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, id);
-    input_mt_sync(ts->input_dev);
-#endif
 
     GTP_DEBUG("ID:%d, X:%d, Y:%d, W:%d", id, x, y, w);
 }
@@ -270,15 +258,9 @@ Output:
 *******************************************************/
 static void gtp_touch_up(struct goodix_ts_data* ts, s32 id)
 {
-#if GTP_ICS_SLOT_REPORT
     input_mt_slot(ts->input_dev, id);
     input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, -1);
     GTP_DEBUG("Touch id[%2d] release!", id);
-#else
-    input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0);
-    input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0);
-    input_mt_sync(ts->input_dev);
-#endif
 }
 
 /*******************************************************
@@ -350,7 +332,6 @@ static void goodix_ts_work_func(struct work_struct *work)
 
     GTP_DEBUG("pre_touch:%02x, finger:%02x.", pre_touch, finger);
 
-#if GTP_ICS_SLOT_REPORT
     if (pre_touch || touch_num)
     {
         s32 pos = 0;
@@ -386,32 +367,6 @@ static void goodix_ts_work_func(struct work_struct *work)
             }
         }
     }
-
-#else
-    if (touch_num )
-    {
-        for (i = 0; i < touch_num; i++)
-        {
-            coor_data = &point_data[i * 8 + 3];
-
-            id = coor_data[0] & 0x0F;
-            input_x  = coor_data[1] | coor_data[2] << 8;
-            input_y  = coor_data[3] | coor_data[4] << 8;
-            input_w  = coor_data[5] | coor_data[6] << 8;
-
-            gtp_touch_down(ts, id, input_x, input_y, input_w);
-        }
-    }
-    else if (pre_touch)
-    {
-        GTP_DEBUG("Touch Release!");
-        gtp_touch_up(ts, 0);
-    }
-
-    pre_touch = touch_num;
-    if (touch_num)
-      input_report_key(ts->input_dev, BTN_TOUCH, touch_num);
-#endif
 
     input_sync(ts->input_dev);
 
@@ -826,11 +781,7 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
     input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);	
 
-#if GTP_ICS_SLOT_REPORT
     input_mt_init_slots(ts->input_dev, 255, INPUT_MT_DIRECT);
-#else
-    ts->input_dev->keybit[BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH);
-#endif
 
     sprintf(phys, "input/ts");
     ts->input_dev->name = goodix_ts_name;
