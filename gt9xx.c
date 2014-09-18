@@ -83,12 +83,8 @@ struct goodix_ts_data {
 					}while (0)
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
-struct i2c_client * i2c_connect_client = NULL;
 static u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
 				= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
-
-static s8 gtp_i2c_test(struct i2c_client *client);
-void gtp_int_sync(s32 ms);
 
 /*******************************************************
 Function:
@@ -525,7 +521,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	GTP_INFO("GTP Driver Version:%s",GTP_DRIVER_VERSION);
 	GTP_INFO("GTP I2C Address:0x%02x", client->addr);
 
-	i2c_connect_client = client;
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		GTP_ERROR("I2C check functionality failed.");
 		return -ENODEV;
