@@ -34,11 +34,7 @@ struct i2c_client * i2c_connect_client = NULL;
 static u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
 				= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
 
-static int gt9110_reset_number;
-static int gt9110_int_number;
-
 static s8 gtp_i2c_test(struct i2c_client *client);
-void gtp_reset_guitar(struct i2c_client *client, s32 ms);
 void gtp_int_sync(s32 ms);
 
 #if GTP_AUTO_UPDATE
@@ -87,11 +83,6 @@ s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 		if(ret == 2)break;
 		retries++;
 	}
-	/*if(retries >= 5)
-	{
-		GTP_DEBUG("I2C retry timeout, reset chip.");
-		gtp_reset_guitar(client, 10);
-	}*/
 	return ret;
 }
 
@@ -126,11 +117,6 @@ s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
 		if (ret == 1)break;
 		retries++;
 	}
-	/*if(retries >= 5)
-	{
-		GTP_DEBUG("I2C retry timeout, reset chip.");
-		gtp_reset_guitar(client, 10);
-	}*/
 	return ret;
 }
 
@@ -390,36 +376,7 @@ Output:
 *******************************************************/
 void gtp_int_sync(s32 ms)
 {
-	//gpio_direction_output(gt9110_int_number, 0);
 	msleep(ms);
-	//gpio_direction_input(gt9110_int_number);
-}
-
-/*******************************************************
-Function:
-	Reset chip Function.
-
-Input:
-	ms:reset time.
-
-Output:
-	None.
-*******************************************************/
-void gtp_reset_guitar(struct i2c_client *client, s32 ms)
-{
-	GTP_DEBUG_FUNC();
-
-	gpio_direction_output(gt9110_reset_number, 0); //begin select I2C slave addr
-	msleep(ms);
-	gpio_direction_output(gt9110_int_number, client->addr == 0x14);
-
-	msleep(2);
-	gpio_direction_output(gt9110_reset_number, 1);
-
-	msleep(6);				//must > 3ms
-	gpio_direction_input(gt9110_int_number);	//end select I2C slave addr
-
-	gtp_int_sync(50);
 }
 
 /*******************************************************
@@ -460,8 +417,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 
 
 	msleep(500);
-	gpio_direction_output(gt9110_int_number,0);
-	msleep(10);
 
 	GTP_DEBUG("X_MAX = %d,Y_MAX = %d,TRIGGER = 0x%02x",
 			 ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
@@ -553,8 +508,6 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 
 	GTP_DEBUG("INT trigger type:%x", ts->int_trigger_type);
 
-	gpio_request(ts->client->irq, "GT9110_IRQ_PIN");
-
 	ret  = request_irq(ts->client->irq,
 			   goodix_ts_irq_handler,
 			   irq_table[ts->int_trigger_type],
@@ -562,22 +515,15 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 			   ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
-		gpio_direction_input(gt9110_int_number);
-		gpio_free(gt9110_int_number);
-
 		hrtimer_init(&ts->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 		ts->timer.function = goodix_ts_timer_handler;
 		hrtimer_start(&ts->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 		return -1;
-	} else {
-		gpio_direction_input(gt9110_int_number);
-		//gpio_pull_updown(ts->client->irq, PullDisable);
-		gtp_irq_disable(ts);
-		ts->use_irq = 1;
-		// XXX Use http://www.cs.fsu.edu/~baker/devices/lxr/http/source/linux/Documentation/gpio.txt#L290 ?
-		GTP_ERROR("Don't know how to disable IRQ");
-		return 0;
 	}
+
+	gtp_irq_disable(ts);
+	ts->use_irq = 1;
+	return 0;
 }
 
 /*******************************************************
@@ -667,25 +613,12 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		return -ENOMEM;
 	}
 
-	gt9110_int_number  = client->irq;
-
 	memset(ts, 0, sizeof(*ts));
 	INIT_WORK(&ts->work, goodix_ts_work_func);
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
 	//ts->irq_lock = SPIN_LOCK_UNLOCKED;
 	ts->gtp_rawdiff_mode = 0;
-
-   /* ret = gtp_request_io_port(ts);
-	if (ret < 0) {
-		GTP_ERROR("GTP request IO port failed.");
-		kfree(ts);
-		return ret;
-	}*/
-
-	//gpio_request(ts->client->irq, "GT9110_IRQ_PIN");
-
-	//gtp_reset_guitar(client,10);
 
 	ret = gtp_i2c_test(client);
 	if (ret < 0) {
@@ -759,8 +692,6 @@ static int goodix_ts_remove(struct i2c_client *client)
 
 	if (ts) {
 		if (ts->use_irq) {
-			gpio_direction_input(gt9110_int_number);
-			gpio_free(gt9110_int_number);
 			free_irq(client->irq, ts);
 		} else {
 			hrtimer_cancel(&ts->timer);
@@ -796,9 +727,6 @@ static void gtp_esd_check_func(struct work_struct *work)
 		if (ret >= 0)
 			break;
 	}
-
-	if (i >= 3)
-		gtp_reset_guitar(ts->client, 50);
 
 	if(!ts->gtp_is_suspend)
 		queue_delayed_work(gtp_esd_check_workqueue, &gtp_esd_check_work, GTP_ESD_CHECK_CIRCLE);
