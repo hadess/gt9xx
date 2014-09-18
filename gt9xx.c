@@ -603,9 +603,7 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 
 	ret = gtp_request_irq(ts);
 	if (ret < 0)
-		GTP_INFO("GTP works in polling mode.");
-	else
-		GTP_INFO("GTP works in interrupt mode.");
+		GTP_INFO("GTP error while requesting irq.");
 
 	ret = gtp_read_version(client, &version_info);
 	if (ret < 0)
