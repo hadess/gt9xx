@@ -611,41 +611,7 @@ static struct i2c_driver goodix_ts_driver = {
 	},
 };
 
-/*******************************************************
-Function:
-	Driver Install function.
-Input:
-  None.
-Output:
-	Executive Outcomes. 0---succeed.
-********************************************************/
-static int goodix_ts_init(void)
-{
-	s32 ret;
-
-	GTP_DEBUG_FUNC();
-	GTP_INFO("GTP driver install.");
-	ret = i2c_add_driver(&goodix_ts_driver);
-	return ret;
-}
-
-/*******************************************************
-Function:
-	Driver uninstall function.
-Input:
-  None.
-Output:
-	Executive Outcomes. 0---succeed.
-********************************************************/
-static void __exit goodix_ts_exit(void)
-{
-	GTP_DEBUG_FUNC();
-	GTP_INFO("GTP driver exited.");
-	i2c_del_driver(&goodix_ts_driver);
-}
-
-late_initcall(goodix_ts_init);
-module_exit(goodix_ts_exit);
+module_i2c_driver(goodix_ts_driver);
 
 MODULE_DESCRIPTION("GTP Series Driver");
 MODULE_LICENSE("GPL");
