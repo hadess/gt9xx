@@ -63,10 +63,8 @@ extern u16 total_len;
 #define GTP_AUTO_UPDATE       0
 #define GTP_CHANGE_X2Y        1
 #define GTP_ESD_PROTECT       0
-#define GTP_CREATE_WR_NODE    1
 
 #define GTP_DEBUG_ON          0
-#define GTP_DEBUG_ARRAY_ON    0
 #define GTP_DEBUG_FUNC_ON     0
 
 //STEP_2(REQUIRED):Change I/O define & I/O operation mode.
@@ -118,23 +116,6 @@ extern u16 total_len;
 #define GTP_DEBUG(fmt,arg...)          do{\
                                          if(GTP_DEBUG_ON)\
                                          printk("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
-                                       }while(0)
-#define GTP_DEBUG_ARRAY(array, num)    do{\
-                                         s32 i;\
-                                         u8* a = array;\
-                                         if(GTP_DEBUG_ARRAY_ON)\
-                                         {\
-                                            printk("<<-GTP-DEBUG-ARRAY->>\n");\
-                                            for (i = 0; i < (num); i++)\
-                                            {\
-                                                printk("%02x   ", (a)[i]);\
-                                                if ((i + 1 ) %10 == 0)\
-                                                {\
-                                                    printk("\n");\
-                                                }\
-                                            }\
-                                            printk("\n");\
-                                        }\
                                        }while(0)
 #define GTP_DEBUG_FUNC()               do{\
                                          if(GTP_DEBUG_FUNC_ON)\
