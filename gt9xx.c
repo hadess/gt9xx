@@ -23,7 +23,8 @@
  */
 
 #include <linux/irq.h>
-#include <linux/gt9xx.h>
+#include <linux/slab.h>
+#include "gt9xx.h"
 
 #if GTP_ICS_SLOT_REPORT
     #include <linux/input/mt.h>

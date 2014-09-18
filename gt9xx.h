@@ -33,7 +33,7 @@
 #include <linux/vmalloc.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
-#include <mach/gpio.h>
+#include "gpio.h"
 #include <linux/earlysuspend.h>
 
 struct goodix_ts_data {
