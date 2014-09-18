@@ -84,13 +84,11 @@ s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
     msgs[0].addr  = client->addr;
     msgs[0].len   = GTP_ADDR_LENGTH;
     msgs[0].buf   = &buf[0];
-    msgs[0].scl_rate=200000;
 
     msgs[1].flags = I2C_M_RD;
     msgs[1].addr  = client->addr;
     msgs[1].len   = len - GTP_ADDR_LENGTH;
     msgs[1].buf   = &buf[GTP_ADDR_LENGTH];
-    msgs[0].scl_rate=200000;
 
     while(retries < 1)
     {
@@ -131,7 +129,6 @@ s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
     msg.addr  = client->addr;
     msg.len   = len;
     msg.buf   = buf;
-    msg.scl_rate=200000;
 
     while(retries < 1)
     {
