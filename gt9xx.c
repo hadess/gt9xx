@@ -886,13 +886,9 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
         GTP_ERROR("Alloc GFP_KERNEL memory failed.");
         return -ENOMEM;
     }
-    
-    gt9110_platform_data = client->dev.platform_data;
-    printk("GT9110 reset pin is  %d, INT pin is %d \n ", gt9110_platform_data->reset, gt9110_platform_data->irq_pin);
-   
-    gt9110_reset_number = gt9110_platform_data->reset;
-    gt9110_int_number  = gt9110_platform_data->irq_pin;
-    
+
+    gt9110_int_number  = client->irq;
+
     memset(ts, 0, sizeof(*ts));
     INIT_WORK(&ts->work, goodix_ts_work_func);
     ts->client = client;
