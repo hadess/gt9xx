@@ -37,10 +37,6 @@ static u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
 static s8 gtp_i2c_test(struct i2c_client *client);
 void gtp_int_sync(s32 ms);
 
-#if GTP_AUTO_UPDATE
-extern u8 gup_init_update_proc(struct goodix_ts_data *);
-#endif
-
 /*******************************************************
 Function:
 	Read data from the i2c slave device.
@@ -598,12 +594,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		}
 		GTP_INFO("GTP I2C new Address:0x%02x", client->addr);
 	}
-
-#if GTP_AUTO_UPDATE
-	ret = gup_init_update_proc(ts);
-	if (ret < 0)
-		GTP_ERROR("Create update thread error.");
-#endif
 
 	ret = gtp_init_panel(ts);
 	if (ret < 0)
