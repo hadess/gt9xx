@@ -44,11 +44,6 @@ static s8 gtp_i2c_test(struct i2c_client *client);
 void gtp_reset_guitar(struct i2c_client *client, s32 ms);
 void gtp_int_sync(s32 ms);
 
-#if GTP_CREATE_WR_NODE
-extern s32 init_wr_node(struct i2c_client*);
-extern void uninit_wr_node(void);
-#endif
-
 #if GTP_AUTO_UPDATE
 extern u8 gup_init_update_proc(struct goodix_ts_data *);
 #endif
@@ -971,10 +966,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 
     gtp_irq_enable(ts);
 
-#if GTP_CREATE_WR_NODE
-    init_wr_node(client);
-#endif
-
 #if GTP_ESD_PROTECT
     INIT_DELAYED_WORK(&gtp_esd_check_work, gtp_esd_check_func);
     gtp_esd_check_workqueue = create_workqueue("gtp_esd_check");
@@ -1000,10 +991,6 @@ static int goodix_ts_remove(struct i2c_client *client)
     struct goodix_ts_data *ts = i2c_get_clientdata(client);
 	
     GTP_DEBUG_FUNC();
-
-#if GTP_CREATE_WR_NODE
-    uninit_wr_node();
-#endif
 
 #if GTP_ESD_PROTECT
     destroy_workqueue(gtp_esd_check_workqueue);
