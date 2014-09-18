@@ -59,7 +59,6 @@ extern u16 show_len;
 extern u16 total_len;
 
 //***************************PART1:ON/OFF define*******************************
-#define GTP_HAVE_TOUCH_KEY    0
 #define GTP_POWER_CTRL_SLEEP  0
 #define GTP_AUTO_UPDATE       0
 #define GTP_CHANGE_X2Y        1
@@ -95,11 +94,6 @@ extern u16 total_len;
 #define GTP_INT_TRIGGER  1
 #define GTP_MAX_TOUCH         10
 #define GTP_ESD_CHECK_CIRCLE  2000
-
-//STEP_4(optional):If this project have touch key,Set touch key config.                                    
-#if GTP_HAVE_TOUCH_KEY
-    #define GTP_KEY_TAB	 {KEY_MENU, KEY_HOME, KEY_BACK, KEY_SEND}
-#endif
 
 //***************************PART3:OTHER define*********************************
 #define GTP_DRIVER_VERSION    "V1.2<2012/10/25>"
