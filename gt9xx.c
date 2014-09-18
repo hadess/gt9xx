@@ -825,7 +825,6 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
     input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);	
-    input_set_abs_params(ts->input_dev, ABS_MT_TRACKING_ID, 0, 255, 0, 0);
 
 #if GTP_ICS_SLOT_REPORT
     input_mt_init_slots(ts->input_dev, 255, INPUT_MT_DIRECT);
