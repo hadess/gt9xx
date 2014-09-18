@@ -271,7 +271,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 
 		GTP_DEBUG("id=%d,touch_index=0x%x,pre_touch=0x%x\n",id, touch_index,pre_touch);
 		for (i = 0; i < GTP_MAX_TOUCH; i++) {
-			if (touch_index & (0x01<<i)) {
+			if (touch_index & (0x01 << i)) {
 				input_x  = coor_data[pos + 1] | coor_data[pos + 2] << 8;
 				input_y  = coor_data[pos + 3] | coor_data[pos + 4] << 8;
 				input_w  = coor_data[pos + 5] | coor_data[pos + 6] << 8;
@@ -281,7 +281,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 
 				pos += 8;
 				id = coor_data[pos] & 0x0F;
-				touch_index |= (0x01<<id);
+				touch_index |= (0x01 << id);
 			} else { // if (pre_touch & (0x01 << i))
 				gtp_touch_up(ts, i);
 				pre_touch &= ~(0x01 << i);
@@ -409,7 +409,7 @@ static s8 gtp_i2c_test(struct i2c_client *client)
 	u8 retry = 0;
 	s8 ret = -1;
 
-	while(retry++ < 2) {
+	while (retry++ < 2) {
 		ret = gtp_i2c_read(client, test, 3);
 		if (ret > 0)
 			return ret;
