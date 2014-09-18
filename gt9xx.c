@@ -83,8 +83,6 @@ struct goodix_ts_data {
 					}while (0)
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
-static u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
-		= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
 
 /*******************************************************
 Function:
@@ -332,6 +330,8 @@ Output:
 static void gtp_init_panel(struct goodix_ts_data *ts)
 {
 	s32 ret;
+	u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
+		= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
 
 	ret = gtp_i2c_read(ts->client, config, GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH);
 	if (ret < 0) {
