@@ -390,7 +390,7 @@ Output:
 *******************************************************/
 void gtp_int_sync(s32 ms)
 {
-	//GTP_GPIO_OUTPUT(gt9110_int_number, 0);
+	//gpio_direction_output(gt9110_int_number, 0);
 	msleep(ms);
 	//gpio_direction_input(gt9110_int_number);
 }
@@ -409,12 +409,12 @@ void gtp_reset_guitar(struct i2c_client *client, s32 ms)
 {
 	GTP_DEBUG_FUNC();
 
-	GTP_GPIO_OUTPUT(gt9110_reset_number, 0); //begin select I2C slave addr
+	gpio_direction_output(gt9110_reset_number, 0); //begin select I2C slave addr
 	msleep(ms);
-	GTP_GPIO_OUTPUT(gt9110_int_number, client->addr == 0x14);
+	gpio_direction_output(gt9110_int_number, client->addr == 0x14);
 
 	msleep(2);
-	GTP_GPIO_OUTPUT(gt9110_reset_number, 1);
+	gpio_direction_output(gt9110_reset_number, 1);
 
 	msleep(6);				//must > 3ms
 	gpio_direction_input(gt9110_int_number);	//end select I2C slave addr
