@@ -36,67 +36,67 @@
 #include <linux/gpio.h>
 
 struct goodix_ts_data {
-    spinlock_t irq_lock;
-    struct i2c_client *client;
-    struct input_dev  *input_dev;
-    struct work_struct  work;
-    s32 irq_is_disable;
-    u16 abs_x_max;
-    u16 abs_y_max;
-    u8  max_touch_num;
-    u8  int_trigger_type;
-    u8  gtp_rawdiff_mode;
-    u8  gtp_cfg_len;
+	spinlock_t irq_lock;
+	struct i2c_client *client;
+	struct input_dev  *input_dev;
+	struct work_struct  work;
+	s32 irq_is_disable;
+	u16 abs_x_max;
+	u16 abs_y_max;
+	u8  max_touch_num;
+	u8  int_trigger_type;
+	u8  gtp_rawdiff_mode;
+	u8  gtp_cfg_len;
 };
 
 //***************************PART1:ON/OFF define*******************************
-#define GTP_CHANGE_X2Y        1
+#define GTP_CHANGE_X2Y		1
 
-#define GTP_DEBUG_ON          0
-#define GTP_DEBUG_FUNC_ON     0
+#define GTP_DEBUG_ON		0
+#define GTP_DEBUG_FUNC_ON		0
 
 //STEP_2(REQUIRED):Change I/O define & I/O operation mode.
-#define GTP_IRQ_TAB                     {IRQ_TYPE_EDGE_RISING, IRQ_TYPE_EDGE_FALLING, IRQ_TYPE_LEVEL_LOW, IRQ_TYPE_LEVEL_HIGH}
+#define GTP_IRQ_TAB		{IRQ_TYPE_EDGE_RISING, IRQ_TYPE_EDGE_FALLING, IRQ_TYPE_LEVEL_LOW, IRQ_TYPE_LEVEL_HIGH}
 
-#define GTP_MAX_HEIGHT   4096
-#define GTP_MAX_WIDTH    4096
-#define GTP_INT_TRIGGER  1
-#define GTP_MAX_TOUCH         10
+#define GTP_MAX_HEIGHT		4096
+#define GTP_MAX_WIDTH		4096
+#define GTP_INT_TRIGGER		1
+#define GTP_MAX_TOUCH		10
 
 //***************************PART3:OTHER define*********************************
-#define GTP_DRIVER_VERSION    "V1.2<2012/10/25>"
-#define GTP_I2C_NAME          "Goodix9110-TS"
-#define GTP_ADDR_LENGTH       2
-#define GTP_CONFIG_MAX_LENGTH 240
-#define FAIL                  0
-#define SUCCESS               1
+#define GTP_DRIVER_VERSION	"V1.2<2012/10/25>"
+#define GTP_I2C_NAME		"Goodix9110-TS"
+#define GTP_ADDR_LENGTH		2
+#define GTP_CONFIG_MAX_LENGTH	240
+#define FAIL			0
+#define SUCCESS			1
 
 //Register define
-#define GTP_READ_COOR_ADDR    0x814E
-#define GTP_REG_SLEEP         0x8040
-#define GTP_REG_SENSOR_ID     0x814A
-#define GTP_REG_CONFIG_DATA   0x8047
-#define GTP_REG_VERSION       0x8140
+#define GTP_READ_COOR_ADDR	0x814E
+#define GTP_REG_SLEEP		0x8040
+#define GTP_REG_SENSOR_ID	0x814A
+#define GTP_REG_CONFIG_DATA	0x8047
+#define GTP_REG_VERSION		0x8140
 
-#define RESOLUTION_LOC        3
-#define TRIGGER_LOC           8
+#define RESOLUTION_LOC		3
+#define TRIGGER_LOC		8
 
 //Log define
-#define GTP_INFO(fmt,arg...)           printk("<<-GTP-INFO->> "fmt"\n",##arg)
-#define GTP_ERROR(fmt,arg...)          printk("<<-GTP-ERROR->> "fmt"\n",##arg)
-#define GTP_DEBUG(fmt,arg...)          do{\
-                                         if(GTP_DEBUG_ON)\
-                                         printk("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
-                                       }while(0)
-#define GTP_DEBUG_FUNC()               do{\
-                                         if(GTP_DEBUG_FUNC_ON)\
-                                         printk("<<-GTP-FUNC->> Func:%s@Line:%d\n",__func__,__LINE__);\
-                                       }while(0)
-#define GTP_SWAP(x, y)                 do{\
-                                         typeof(x) z = x;\
-                                         x = y;\
-                                         y = z;\
-                                       }while (0)
+#define GTP_INFO(fmt,arg...)		printk("<<-GTP-INFO->> "fmt"\n",##arg)
+#define GTP_ERROR(fmt,arg...)		printk("<<-GTP-ERROR->> "fmt"\n",##arg)
+#define GTP_DEBUG(fmt,arg...)		do{\
+						if(GTP_DEBUG_ON)\
+							printk("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
+					}while(0)
+#define GTP_DEBUG_FUNC()		do{\
+						if(GTP_DEBUG_FUNC_ON)\
+							printk("<<-GTP-FUNC->> Func:%s@Line:%d\n",__func__,__LINE__);\
+					}while(0)
+#define GTP_SWAP(x, y)			do{\
+						typeof(x) z = x;\
+						x = y;\
+						y = z;\
+					}while (0)
 
 //*****************************End of Part III********************************
 
