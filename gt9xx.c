@@ -49,11 +49,6 @@ static s8 gtp_i2c_test(struct i2c_client *client);
 void gtp_reset_guitar(struct i2c_client *client, s32 ms);
 void gtp_int_sync(s32 ms);
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static void goodix_ts_early_suspend(struct early_suspend *h);
-static void goodix_ts_late_resume(struct early_suspend *h);
-#endif
- 
 #if GTP_CREATE_WR_NODE
 extern s32 init_wr_node(struct i2c_client*);
 extern void uninit_wr_node(void);
@@ -556,96 +551,6 @@ void gtp_reset_guitar(struct i2c_client *client, s32 ms)
 
 /*******************************************************
 Function:
-	Eter sleep function.
-
-Input:
-	ts:private data.
-	
-Output:
-	Executive outcomes.0--success,non-0--fail.
-*******************************************************/
-static s8 gtp_enter_sleep(struct goodix_ts_data * ts)
-{
-    s8 ret = -1;
-    s8 retry = 0;
-    u8 i2c_control_buf[3] = {(u8)(GTP_REG_SLEEP >> 8), (u8)GTP_REG_SLEEP, 5};
-
-    GTP_DEBUG_FUNC();
-    
-    if( gt915_flag == 1)
-    	return 0;
-
-    GTP_GPIO_OUTPUT(gt9110_int_number, 0);
-    msleep(10);
-	  
-    while(retry++ < 5)
-    {
-        ret = gtp_i2c_write(ts->client, i2c_control_buf, 3);
-        if (ret > 0)
-        {
-            printk("GTP enter sleep!\n");
-            return ret;
-        }
-        msleep(10);
-    }
-    GTP_ERROR("GTP send sleep cmd failed.");
-    return ret;
-}
-
-/*******************************************************
-Function:
-	Wakeup from sleep mode Function.
-
-Input:
-	ts:	private data.
-	
-Output:
-	Executive outcomes.0--success,non-0--fail.
-*******************************************************/
-static s8 gtp_wakeup_sleep(struct goodix_ts_data * ts)
-{
-    u8 retry = 0;
-    s8 ret = -1;
-
-    GTP_DEBUG_FUNC();
-
-#if GTP_POWER_CTRL_SLEEP
-    while(retry++ < 5)
-    {
-        gtp_reset_guitar(ts->client, 20);
-        ret = gtp_send_cfg(ts->client);
-        if (ret > 0)
-        {
-            GTP_DEBUG("Wakeup sleep send config success.");
-            return ret;
-        }
-    }
-#else
-
-     if( gt915_flag == 1)
-        return 0;
-
-     gpio_direction_output(gt9110_int_number,1);
-     msleep(10);
-   
-    //gpio_direction_output(gt9110_reset_number,0);
-    //msleep(5);
-    //gpio_direction_output(gt9110_reset_number,1);
-    //msleep(50);
-    
-    
-    gpio_direction_input(gt9110_int_number);
-    gpio_pull_updown(gt9110_int_number, PullDisable);
-    ret = 0; 
-    printk("GTP wakeup \n ");
-
-#endif
-
-    return ret;
-}
-
-/*******************************************************
-Function:
 	GTP initialize function.
 
 Input:
@@ -995,13 +900,6 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
         GTP_ERROR("Register %s input device failed", ts->input_dev->name);
         return -ENODEV;
     }
-    
-#ifdef CONFIG_HAS_EARLYSUSPEND
-    ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
-    ts->early_suspend.suspend = goodix_ts_early_suspend;
-    ts->early_suspend.resume = goodix_ts_late_resume;
-    register_early_suspend(&ts->early_suspend);
-#endif
 
     return 0;
 }
@@ -1151,10 +1049,6 @@ static int goodix_ts_remove(struct i2c_client *client)
     struct goodix_ts_data *ts = i2c_get_clientdata(client);
 	
     GTP_DEBUG_FUNC();
-	
-#ifdef CONFIG_HAS_EARLYSUSPEND
-    unregister_early_suspend(&ts->early_suspend);
-#endif
 
 #if GTP_CREATE_WR_NODE
     uninit_wr_node();
@@ -1185,85 +1079,6 @@ static int goodix_ts_remove(struct i2c_client *client)
 
     return 0;
 }
-
-/*******************************************************
-Function:
-	Early suspend function.
-
-Input:
-	h:early_suspend struct.
-	
-Output:
-	None.
-*******************************************************/
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static void goodix_ts_early_suspend(struct early_suspend *h)
-{
-    struct goodix_ts_data *ts;
-    s8 ret = -1;	
-    ts = container_of(h, struct goodix_ts_data, early_suspend);
-	
-    GTP_DEBUG_FUNC();
-
-#if GTP_ESD_PROTECT
-    ts->gtp_is_suspend = 1;
-    cancel_delayed_work_sync(&gtp_esd_check_work);
-#endif
-
-    if (ts->use_irq)
-    {
-        gtp_irq_disable(ts);
-    }
-    else
-    {
-        hrtimer_cancel(&ts->timer);
-    }
-    ret = gtp_enter_sleep(ts);
-    if (ret < 0)
-    {
-        GTP_ERROR("GTP early suspend failed.");
-    }
-}
-
-/*******************************************************
-Function:
-	Late resume function.
-
-Input:
-	h:early_suspend struct.
-	
-Output:
-	None.
-*******************************************************/
-static void goodix_ts_late_resume(struct early_suspend *h)
-{
-    struct goodix_ts_data *ts;
-    s8 ret = -1;
-    ts = container_of(h, struct goodix_ts_data, early_suspend);
-	
-    GTP_DEBUG_FUNC();
-	
-    ret = gtp_wakeup_sleep(ts);
-    if (ret < 0)
-    {
-        GTP_ERROR("GTP later resume failed.");
-    }
-
-    if (ts->use_irq)
-    {
-        gtp_irq_enable(ts);
-    }
-    else
-    {
-        hrtimer_start(&ts->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
-    }
-
-#if GTP_ESD_PROTECT
-    ts->gtp_is_suspend = 0;
-    queue_delayed_work(gtp_esd_check_workqueue, &gtp_esd_check_work, GTP_ESD_CHECK_CIRCLE);
-#endif
-}
-#endif
 
 #if GTP_ESD_PROTECT
 static void gtp_esd_check_func(struct work_struct *work)
@@ -1313,10 +1128,6 @@ static const struct i2c_device_id goodix_ts_id[] = {
 static struct i2c_driver goodix_ts_driver = {
     .probe      = goodix_ts_probe,
     .remove     = goodix_ts_remove,
-#ifndef CONFIG_HAS_EARLYSUSPEND
-    .suspend    = goodix_ts_early_suspend,
-    .resume     = goodix_ts_late_resume,
-#endif
     .id_table   = goodix_ts_id,
     .driver = {
         .name     = GTP_I2C_NAME,
