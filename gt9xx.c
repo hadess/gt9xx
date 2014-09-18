@@ -138,36 +138,6 @@ s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
 
 /*******************************************************
 Function:
-	Send config Function.
-
-Input:
-	client:	i2c client.
-
-Output:
-	Executive outcomes.0--success,non-0--fail.
-*******************************************************/
-s32 gtp_send_cfg(struct i2c_client *client)
-{
-    s32 ret = 0;
-    
-#if  GTP_DRIVER_SEND_CFG
-    s32 retry = 0;
-
-    for (retry = 0; retry < 5; retry++)
-    {
-        ret = gtp_i2c_write(client, config , GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH);
-        if (ret > 0)
-        {
-            break;
-        }
-    }
-#endif
-
-    return ret;
-}
-
-/*******************************************************
-Function:
 	Enable IRQ Function.
 
 Input:
@@ -488,99 +458,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 {
     s32 ret = -1;
   
-#if GTP_DRIVER_SEND_CFG
-    s32 i;
-    u8 check_sum = 0;
-    u8 rd_cfg_buf[16];
-    u8 buf[8] = {GTP_REG_VERSION >> 8, GTP_REG_VERSION & 0xff};
-    u8 cfg_info_group1[] = CTP_CFG_GROUP1;
-    u8 cfg_info_group2[] = CTP_CFG_GROUP2;
-    u8 cfg_info_group3[] = CTP_CFG_GROUP3;
-    u8 *send_cfg_buf[3] = {cfg_info_group1, cfg_info_group2, cfg_info_group3};
-    u8 cfg_info_len[3] = {sizeof(cfg_info_group1)/sizeof(cfg_info_group1[0]), 
-                          sizeof(cfg_info_group2)/sizeof(cfg_info_group2[0]),
-                          sizeof(cfg_info_group3)/sizeof(cfg_info_group3[0])};
-    for(i=0; i<3; i++)
-    {
-        if(cfg_info_len[i] > ts->gtp_cfg_len)
-        {
-            ts->gtp_cfg_len = cfg_info_len[i];
-        }
-    }
-    ts->gtp_cfg_len =  ts->gtp_cfg_len ;
-     
-    GTP_DEBUG("len1=%d,len2=%d,len3=%d,send_len:%d",cfg_info_len[0],cfg_info_len[1],cfg_info_len[2],ts->gtp_cfg_len);
-    if((!cfg_info_len[1]) && (!cfg_info_len[2]))
-    {
-        rd_cfg_buf[GTP_ADDR_LENGTH] = 0; 
-    }
-    else
-    {
-       /* rd_cfg_buf[0] = GTP_REG_SENSOR_ID >> 8;
-        rd_cfg_buf[1] = GTP_REG_SENSOR_ID & 0xff;
-        ret = gtp_i2c_read(ts->client, rd_cfg_buf, 3);
-        GTP_DEBUG ("Read SENSOR ID %d\n ", rd_cfg_buf[GTP_ADDR_LENGTH] );
-        if (ret < 0)
-        {
-            GTP_ERROR("Read SENSOR ID failed,default use group1 config!");
-            rd_cfg_buf[GTP_ADDR_LENGTH] = 0;
-        }
-        rd_cfg_buf[GTP_ADDR_LENGTH] &= 0x07;*/
-        ret = gtp_i2c_read(ts->client, buf, sizeof(buf));
-        if (ret < 0)
-        {
-        	GTP_ERROR("GTP read version failed , use default value\n");	
-        	ts->abs_x_max = 800;
-        	ts->abs_y_max = 1280;
-        	ts->int_trigger_type = 1;  //Falliing 
-        	msleep(500);
-    		gpio_direction_output(gt9110_int_number,0);
-    		msleep(10);
-        	return 0;
-	}	
-        /* IF Buf[2] is  '5' , then this means gt915 ic */
-        if( buf[4] == '5')
-        {
-            rd_cfg_buf[GTP_ADDR_LENGTH]	= 1;
-            gt915_flag = 1;
-	}
-	else
-	{
-	     rd_cfg_buf[GTP_ADDR_LENGTH] = 0;
-	     gt915_flag = 0;
-	}		
-    }
-    GTP_DEBUG("SENSOR ID:%d", rd_cfg_buf[GTP_ADDR_LENGTH]);
-    memset(&config[GTP_ADDR_LENGTH], 0, GTP_CONFIG_MAX_LENGTH);
-    memcpy(&config[GTP_ADDR_LENGTH], send_cfg_buf[rd_cfg_buf[GTP_ADDR_LENGTH]], ts->gtp_cfg_len);
-
-#if GTP_CUSTOM_CFG
-    config[RESOLUTION_LOC]     = (u8)GTP_MAX_WIDTH;
-    config[RESOLUTION_LOC + 1] = (u8)(GTP_MAX_WIDTH>>8);
-    config[RESOLUTION_LOC + 2] = (u8)GTP_MAX_HEIGHT;
-    config[RESOLUTION_LOC + 3] = (u8)(GTP_MAX_HEIGHT>>8);
-    
-    if (GTP_INT_TRIGGER == 0)  //RISING
-    {
-        config[TRIGGER_LOC] &= 0xfe; 
-    }
-    else if (GTP_INT_TRIGGER == 1)  //FALLING
-    {
-        config[TRIGGER_LOC] |= 0x01;
-    }
-#endif  //endif GTP_CUSTOM_CFG
-    
-    check_sum = 0;
-    for (i = GTP_ADDR_LENGTH; i < ts->gtp_cfg_len ; i++)
-    {
-        check_sum += config[i];
-    }
-    config[ts->gtp_cfg_len ] = (~check_sum) + 1;
-    
-    GTP_DEBUG("ts->gtp_cfg_len is %d, Check_sum is  0x%x",ts->gtp_cfg_len, config[ts->gtp_cfg_len]);  
-    
-#else //else DRIVER NEED NOT SEND CONFIG
-
     if(ts->gtp_cfg_len == 0)
     {
         ts->gtp_cfg_len = GTP_CONFIG_MAX_LENGTH;
@@ -593,7 +470,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
         ts->abs_y_max = GTP_MAX_HEIGHT;
         ts->int_trigger_type = GTP_INT_TRIGGER;
     }
-#endif //endif GTP_DRIVER_SEND_CFG
 
     GTP_DEBUG_FUNC();
 
@@ -612,12 +488,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
     gpio_direction_output(gt9110_int_number,0);
     msleep(10);
     
-    ret = gtp_send_cfg(ts->client);
-    if (ret < 0)
-    {
-        GTP_ERROR("Send config error.");
-    }
-
     GTP_DEBUG("X_MAX = %d,Y_MAX = %d,TRIGGER = 0x%02x",
              ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
 
