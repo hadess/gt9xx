@@ -103,7 +103,7 @@ Input:
 Output:
 	numbers of i2c_msgs to transfer
 *********************************************************/
-s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
+static s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 {
 	struct i2c_msg msgs[2];
 	s32 ret=-1;
@@ -319,20 +319,6 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 
 	return IRQ_HANDLED;
 }
-/*******************************************************
-Function:
-	Int sync Function.
-
-Input:
-	ms:sync time.
-
-Output:
-	None.
-*******************************************************/
-void gtp_int_sync(s32 ms)
-{
-	msleep(ms);
-}
 
 /*******************************************************
 Function:
@@ -386,7 +372,7 @@ Input:
 Output:
 	Executive outcomes.0---succeed.
 *******************************************************/
-s32 gtp_read_version(struct i2c_client *client, u16* version)
+static s32 gtp_read_version(struct i2c_client *client, u16* version)
 {
 	s32 ret = -1;
 	s32 i = 0;
