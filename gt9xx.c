@@ -563,7 +563,7 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 	if (ret) {
 		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
 		gpio_direction_input(gt9110_int_number);
-		GTP_GPIO_FREE(gt9110_int_number);
+		gpio_free(gt9110_int_number);
 
 		hrtimer_init(&ts->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 		ts->timer.function = goodix_ts_timer_handler;
@@ -760,7 +760,7 @@ static int goodix_ts_remove(struct i2c_client *client)
 	if (ts) {
 		if (ts->use_irq) {
 			gpio_direction_input(gt9110_int_number);
-			GTP_GPIO_FREE(gt9110_int_number);
+			gpio_free(gt9110_int_number);
 			free_irq(client->irq, ts);
 		} else {
 			hrtimer_cancel(&ts->timer);

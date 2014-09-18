@@ -73,7 +73,6 @@ extern u16 total_len;
 #define GTP_INT_IRQ     306
 #define GTP_INT_CFG     //S3C_GPIO_SFN(0xF)
 
-#define GTP_GPIO_FREE(pin)              gpio_free(pin)
 #define GTP_IRQ_TAB                     {IRQ_TYPE_EDGE_RISING, IRQ_TYPE_EDGE_FALLING, IRQ_TYPE_LEVEL_LOW, IRQ_TYPE_LEVEL_HIGH}
 
 #define GTP_MAX_HEIGHT   4096
