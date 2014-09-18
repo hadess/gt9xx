@@ -816,11 +816,6 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
     }
 
     ts->input_dev->evbit[0] = BIT_MASK(EV_SYN) | BIT_MASK(EV_KEY) | BIT_MASK(EV_ABS) ;
-#if GTP_ICS_SLOT_REPORT
-    input_mt_init_slots(ts->input_dev, 255, INPUT_MT_DIRECT);
-#else
-    ts->input_dev->keybit[BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH);
-#endif
 
 #if GTP_CHANGE_X2Y
     GTP_SWAP(ts->abs_x_max, ts->abs_y_max);
@@ -831,6 +826,12 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
     input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);	
     input_set_abs_params(ts->input_dev, ABS_MT_TRACKING_ID, 0, 255, 0, 0);
+
+#if GTP_ICS_SLOT_REPORT
+    input_mt_init_slots(ts->input_dev, 255, INPUT_MT_DIRECT);
+#else
+    ts->input_dev->keybit[BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH);
+#endif
 
     sprintf(phys, "input/ts");
     ts->input_dev->name = goodix_ts_name;
