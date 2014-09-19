@@ -555,25 +555,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	return 0;
 }
 
-
-/*******************************************************
-Function:
-	Goodix touchscreen driver release function.
-
-Input:
-	client:	i2c device struct.
-
-Output:
-	Executive outcomes. 0---succeed.
-*******************************************************/
-static int goodix_ts_remove(struct i2c_client *client)
-{
-	GTP_INFO("GTP driver is removing...");
-	i2c_set_clientdata(client, NULL);
-
-	return 0;
-}
-
 static const struct i2c_device_id goodix_ts_id[] = {
 	{ GTP_I2C_NAME, 0 },
 	{ "GDIX1001:00", 0 },
@@ -588,7 +569,6 @@ MODULE_DEVICE_TABLE(acpi, goodix_acpi_match);
 
 static struct i2c_driver goodix_ts_driver = {
 	.probe = goodix_ts_probe,
-	.remove = goodix_ts_remove,
 	.id_table = goodix_ts_id,
 	.driver = {
 		.name = GTP_I2C_NAME,
