@@ -41,7 +41,7 @@ struct goodix_ts_data {
 	u8 int_trigger_type;
 };
 
-#define GTP_CHANGE_X2Y		1
+#define GTP_CHANGE_X2Y		0
 
 #define GTP_DEBUG_ON		0
 
