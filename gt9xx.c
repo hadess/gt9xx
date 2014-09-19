@@ -76,19 +76,13 @@ struct goodix_ts_data {
 					}while(0)
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 
-/*******************************************************
-Function:
-	Read data from the i2c slave device.
-
-Input:
-	client:	i2c device.
-	buf[0]:operate address.
-	buf[1]~buf[len]:read data buffer.
-	len:operate length.
-
-Output:
-	numbers of i2c_msgs to transfer
-*********************************************************/
+/**
+ * gtp_i2c_read - read data from a register of the i2c slave device.
+ *
+ * @client: i2c device.
+ * @buf: raw write data buffer.
+ * @len: lenght of the buffer to write
+ */
 static s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 {
 	struct i2c_msg msgs[2];
@@ -114,20 +108,18 @@ static s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 	return ret;
 }
 
-/*******************************************************
-Function:
-	write data to the i2c slave device.
-
-Input:
-	client:	i2c device.
-	buf[0]:operate address.
-	buf[1]~buf[len]:write data buffer.
-	len:operate length.
-
-Output:
-	numbers of i2c_msgs to transfer.
-*********************************************************/
-s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
+/**
+ * gtp_i2c_write - write data to the i2c slave device.
+ *
+ * @client: i2c device.
+ * @buf: raw write data buffer.
+ * @len: lenght of the buffer to write
+ *
+ * The function does not take the destination register as a parameter.
+ * The caller is in charge of setting the register properly in the first bytes
+ * of buf.
+ */
+s32 gtp_i2c_write(struct i2c_client *client, u8 *buf, s32 len)
 {
 	struct i2c_msg msg;
 	s32 ret=-1;
@@ -146,16 +138,14 @@ s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
 	return ret;
 }
 
-/*******************************************************
-Function:
-	Goodix touchscreen work function.
-
-Input:
-	work:	work_struct of goodix_wq.
-
-Output:
-	None.
-*******************************************************/
+/**
+ * goodix_ts_work_func - Process incoming IRQ
+ *
+ * @ts: our goodix_ts_data pointer
+ *
+ * Called when the IRQ is triggered. Read the current device state, and push
+ * the input events to the user space.
+ */
 static void goodix_ts_work_func(struct goodix_ts_data *ts)
 {
 	u8  end_cmd[3] = {
@@ -256,17 +246,12 @@ exit_work_func:
 		GTP_INFO("I2C write end_cmd  error!");
 }
 
-/*******************************************************
-Function:
-	External interrupt service routine.
-
-Input:
-	irq:	interrupt number.
-	dev_id: private data pointer.
-
-Output:
-	irq execute status.
-*******************************************************/
+/**
+ * goodix_ts_irq_handler - The IRQ handler
+ *
+ * @irq: interrupt number.
+ * @dev_id: private data pointer.
+ */
 static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 {
 	struct goodix_ts_data *ts = dev_id;
@@ -276,16 +261,13 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-/*******************************************************
-Function:
-	GTP initialize function.
-
-Input:
-	ts:	i2c client private struct.
-
-Output:
-	Executive outcomes.0---succeed.
-*******************************************************/
+/**
+ * gtp_read_version - Initialize the panel
+ *
+ * @ts: our goodix_ts_data pointer
+ *
+ * Must be called during probe
+ */
 static void gtp_init_panel(struct goodix_ts_data *ts)
 {
 	s32 ret;
@@ -316,17 +298,13 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
 			 ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
 }
 
-/*******************************************************
-Function:
-	Read goodix touchscreen version function.
 
-Input:
-	client:	i2c client struct.
-	version:address to store version info
-
-Output:
-	Executive outcomes.0---succeed.
-*******************************************************/
+/**
+ * gtp_read_version - Read goodix touchscreen version
+ *
+ * @client: the i2c client
+ * @version: output buffer containing the version on success
+ */
 static s32 gtp_read_version(struct i2c_client *client, u16* version)
 {
 	s32 ret = -1;
@@ -352,16 +330,11 @@ static s32 gtp_read_version(struct i2c_client *client, u16* version)
 	return ret;
 }
 
-/*******************************************************
-Function:
-	I2c test Function.
-
-Input:
-	client:i2c client.
-
-Output:
-	Executive outcomes.0--success,non-0--fail.
-*******************************************************/
+/**
+ * gtp_i2c_test - I2C test function to check if the device answers.
+ *
+ * @client: the i2c client
+ */
 static s8 gtp_i2c_test(struct i2c_client *client)
 {
 	u8 test[3] = {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
@@ -379,16 +352,13 @@ static s8 gtp_i2c_test(struct i2c_client *client)
 	return ret;
 }
 
-/*******************************************************
-Function:
-	Request irq Function.
-
-Input:
-	ts:private data.
-
-Output:
-	Executive outcomes.0--success,non-0--fail.
-*******************************************************/
+/**
+ * gtp_request_irq - Request the IRQ handler
+ *
+ * @ts: our goodix_ts_data pointer
+ *
+ * Must be called during probe
+ */
 static s8 gtp_request_irq(struct goodix_ts_data *ts)
 {
 	s32 ret = -1;
@@ -411,16 +381,13 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 	return 0;
 }
 
-/*******************************************************
-Function:
-	Request input device Function.
-
-Input:
-	ts:private data.
-
-Output:
-	Executive outcomes.0--success,non-0--fail.
-*******************************************************/
+/**
+ * gtp_request_input_dev - Allocate, populate and register the input device
+ *
+ * @ts: our goodix_ts_data pointer
+ *
+ * Must be called during probe
+ */
 static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 {
 	s8 ret = -1;
@@ -458,24 +425,14 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 	return 0;
 }
 
-/*******************************************************
-Function:
-	Goodix touchscreen probe function.
-
-Input:
-	client:	i2c device struct.
-	id:device id.
-
-Output:
-	Executive outcomes. 0---succeed.
-*******************************************************/
-static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int goodix_ts_probe(struct i2c_client *client,
+		const struct i2c_device_id *id)
 {
 	s32 ret = -1;
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	GTP_INFO("GTP Driver Version:%s",GTP_DRIVER_VERSION);
+	GTP_INFO("GTP Driver Version:%s", GTP_DRIVER_VERSION);
 	GTP_INFO("GTP I2C Address:0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
