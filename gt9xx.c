@@ -41,8 +41,6 @@ struct goodix_ts_data {
 	u8 int_trigger_type;
 };
 
-#define GTP_CHANGE_X2Y		0
-
 #define GTP_DEBUG_ON		0
 
 #define GTP_IRQ_TAB		{IRQ_TYPE_EDGE_RISING, \
@@ -76,12 +74,6 @@ struct goodix_ts_data {
 						if (GTP_DEBUG_ON)\
 							pr_debug("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
 					}while(0)
-#define GTP_SWAP(x, y)			do{\
-						typeof(x) z = x;\
-						x = y;\
-						y = z;\
-					}while (0)
-
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 
 /*******************************************************
@@ -170,10 +162,6 @@ Output:
 *******************************************************/
 static void gtp_touch_down(struct goodix_ts_data* ts, s32 id, s32 x, s32 y, s32 w)
 {
-#if GTP_CHANGE_X2Y
-	GTP_SWAP(x, y);
-#endif
-
 	input_mt_slot(ts->input_dev, id);
 	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
 	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
@@ -474,10 +462,6 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 	}
 
 	ts->input_dev->evbit[0] = BIT_MASK(EV_SYN) | BIT_MASK(EV_KEY) | BIT_MASK(EV_ABS) ;
-
-#if GTP_CHANGE_X2Y
-	GTP_SWAP(ts->abs_x_max, ts->abs_y_max);
-#endif
 
 	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
