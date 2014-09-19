@@ -83,11 +83,9 @@ static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
  * @buf: raw write data buffer.
  * @len: lenght of the buffer to write
  */
-static s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
+static int gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 {
 	struct i2c_msg msgs[2];
-	s32 ret=-1;
-	s32 retries = 0;
 
 	msgs[0].flags = !I2C_M_RD;
 	msgs[0].addr  = client->addr;
@@ -99,13 +97,7 @@ static s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 	msgs[1].len   = len - GTP_ADDR_LENGTH;
 	msgs[1].buf   = &buf[GTP_ADDR_LENGTH];
 
-	while (retries < 1) {
-		ret = i2c_transfer(client->adapter, msgs, 2);
-		if (ret == 2)
-			break;
-		retries++;
-	}
-	return ret;
+	return i2c_transfer(client->adapter, msgs, 2);
 }
 
 /**
@@ -119,23 +111,16 @@ static s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
  * The caller is in charge of setting the register properly in the first bytes
  * of buf.
  */
-s32 gtp_i2c_write(struct i2c_client *client, u8 *buf, s32 len)
+static int gtp_i2c_write(struct i2c_client *client, u8 *buf, s32 len)
 {
 	struct i2c_msg msg;
-	s32 ret=-1;
-	s32 retries = 0;
 
 	msg.flags = !I2C_M_RD;
 	msg.addr  = client->addr;
 	msg.len   = len;
 	msg.buf   = buf;
 
-	while(retries < 1) {
-		ret = i2c_transfer(client->adapter, &msg, 1);
-		if (ret == 1)break;
-		retries++;
-	}
-	return ret;
+	return i2c_transfer(client->adapter, &msg, 1);
 }
 
 /**
