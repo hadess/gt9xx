@@ -163,16 +163,16 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	u8  point_data[2 + 1 + 8 * GTP_MAX_TOUCH + 1] = {
 			GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF};
 	bool touch_state;
-	u8  touch_num = 0;
-	u8  finger = 0;
+	u8 touch_num;
+	u8 finger;
 	static u16 pre_touch = 0;
 	u8* coor_data = NULL;
-	s32 input_x = 0;
-	s32 input_y = 0;
-	s32 input_w = 0;
-	s32 id = 0;
-	s32 i  = 0;
-	s32 ret = -1;
+	int input_x;
+	int input_y;
+	int input_w;
+	int id = 0;
+	int i;
+	int ret;
 
 	ret = gtp_i2c_read(ts->client, point_data, 12);
 	if (ret < 0) {
