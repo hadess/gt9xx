@@ -517,7 +517,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		return -ENOMEM;
 	}
 
-	memset(ts, 0, sizeof(*ts));
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
 
