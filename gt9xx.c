@@ -148,49 +148,6 @@ s32 gtp_i2c_write(struct i2c_client *client,u8 *buf,s32 len)
 
 /*******************************************************
 Function:
-	Touch down report function.
-
-Input:
-	ts:private data.
-	id:tracking id.
-	x:input x.
-	y:input y.
-	w:input weight.
-
-Output:
-	None.
-*******************************************************/
-static void gtp_touch_down(struct goodix_ts_data* ts, s32 id, s32 x, s32 y, s32 w)
-{
-	input_mt_slot(ts->input_dev, id);
-	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
-	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
-	input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
-	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
-	input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
-
-	GTP_DEBUG("ID:%d, X:%d, Y:%d, W:%d", id, x, y, w);
-}
-
-/*******************************************************
-Function:
-	Touch up report function.
-
-Input:
-	ts:private data.
-
-Output:
-	None.
-*******************************************************/
-static void gtp_touch_up(struct goodix_ts_data* ts, s32 id)
-{
-	input_mt_slot(ts->input_dev, id);
-	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, false);
-	GTP_DEBUG("Touch id[%2d] release!", id);
-}
-
-/*******************************************************
-Function:
 	Goodix touchscreen work function.
 
 Input:
@@ -205,6 +162,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 			GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF, 0};
 	u8  point_data[2 + 1 + 8 * GTP_MAX_TOUCH + 1] = {
 			GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF};
+	bool touch_state;
 	u8  touch_num = 0;
 	u8  finger = 0;
 	static u16 pre_touch = 0;
@@ -257,19 +215,32 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 
 		GTP_DEBUG("id=%d,touch_index=0x%x,pre_touch=0x%x\n",id, touch_index,pre_touch);
 		for (i = 0; i < GTP_MAX_TOUCH; i++) {
-			if (touch_index & (0x01 << i)) {
+			touch_state = touch_index & (0x01 << i);
+			if (touch_state) {
 				input_x  = coor_data[pos + 1] | coor_data[pos + 2] << 8;
 				input_y  = coor_data[pos + 3] | coor_data[pos + 4] << 8;
 				input_w  = coor_data[pos + 5] | coor_data[pos + 6] << 8;
 
-				gtp_touch_down(ts, id, input_x, input_y, input_w);
+				input_mt_slot(ts->input_dev, id);
+				input_mt_report_slot_state(ts->input_dev,
+						MT_TOOL_FINGER, touch_state);
+				input_report_abs(ts->input_dev,
+						ABS_MT_POSITION_X, input_x);
+				input_report_abs(ts->input_dev,
+						ABS_MT_POSITION_Y, input_y);
+				input_report_abs(ts->input_dev,
+						ABS_MT_TOUCH_MAJOR, input_w);
+				input_report_abs(ts->input_dev,
+						ABS_MT_WIDTH_MAJOR, input_w);
 				pre_touch |= 0x01 << i;
 
 				pos += 8;
 				id = coor_data[pos] & 0x0F;
 				touch_index |= (0x01 << id);
-			} else { // if (pre_touch & (0x01 << i))
-				gtp_touch_up(ts, i);
+			} else {
+				input_mt_slot(ts->input_dev, i);
+				input_mt_report_slot_state(ts->input_dev,
+						MT_TOOL_FINGER, touch_state);
 				pre_touch &= ~(0x01 << i);
 			}
 		}
