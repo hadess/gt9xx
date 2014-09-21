@@ -219,13 +219,13 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 }
 
 /**
- * gtp_read_version - Initialize the panel
+ * gtp_read_config - Read the embedded configuration of the panel
  *
  * @ts: our goodix_ts_data pointer
  *
  * Must be called during probe
  */
-static void gtp_init_panel(struct goodix_ts_data *ts)
+static void gtp_read_config(struct goodix_ts_data *ts)
 {
 	int ret;
 	u8 config[GTP_CONFIG_MAX_LENGTH];
@@ -412,7 +412,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 		GTP_INFO("GTP I2C new Address: 0x%02x", client->addr);
 	}
 
-	gtp_init_panel(ts);
+	gtp_read_config(ts);
 
 	ret = gtp_request_input_dev(ts);
 	if (ret < 0) {
