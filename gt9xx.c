@@ -31,6 +31,7 @@
 #include <linux/irq.h>
 #include <linux/interrupt.h>
 #include <linux/slab.h>
+#include <asm/unaligned.h>
 
 struct goodix_ts_data {
 	struct i2c_client *client;
@@ -166,9 +167,9 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8* coor_data)
 {
 	int id = coor_data[0] & 0x0F;
-	int input_x  = coor_data[1] | coor_data[2] << 8;
-	int input_y  = coor_data[3] | coor_data[4] << 8;
-	int input_w  = coor_data[5] | coor_data[6] << 8;
+	int input_x  = get_unaligned_le16(&coor_data[1]);
+	int input_y  = get_unaligned_le16(&coor_data[3]);
+	int input_w  = get_unaligned_le16(&coor_data[5]);
 
 	input_mt_slot(ts->input_dev, id);
 	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
@@ -246,8 +247,8 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
 		return;
 	}
 
-	ts->abs_x_max = (config[RESOLUTION_LOC + 1] << 8) + config[RESOLUTION_LOC];
-	ts->abs_y_max = (config[RESOLUTION_LOC + 3] << 8) + config[RESOLUTION_LOC + 2];
+	ts->abs_x_max = get_unaligned_le16(&config[RESOLUTION_LOC]);
+	ts->abs_y_max = get_unaligned_le16(&config[RESOLUTION_LOC + 2]);
 	ts->int_trigger_type = (config[TRIGGER_LOC]) & 0x03;
 	if ((!ts->abs_x_max)||(!ts->abs_y_max)) {
 		GTP_ERROR("GTP resolution & max_touch_num invalid, use default value!");
@@ -281,7 +282,7 @@ static s32 gtp_read_version(struct i2c_client *client, u16* version)
 	}
 
 	if (version)
-		*version = (buf[5] << 8) | buf[4];
+		*version = get_unaligned_le16(&buf[4]);
 
 	for(i=0; i<4; i++) {
 		if (!buf[i])
