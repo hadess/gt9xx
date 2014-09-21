@@ -262,8 +262,8 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
  */
 static s32 gtp_read_version(struct i2c_client *client, u16* version)
 {
-	s32 ret = -1;
-	s32 i = 0;
+	s32 ret;
+	s32 i;
 	u8 buf[6];
 
 	ret = gtp_i2c_read(client, GTP_REG_VERSION, buf, sizeof(buf));
@@ -293,8 +293,8 @@ static s32 gtp_read_version(struct i2c_client *client, u16* version)
 static s8 gtp_i2c_test(struct i2c_client *client)
 {
 	u8 test;
+	s8 ret;
 	u8 retry = 0;
-	s8 ret = -1;
 
 	while (retry++ < 2) {
 		ret = gtp_i2c_read(client, GTP_REG_CONFIG_DATA, &test, 1);
@@ -316,7 +316,7 @@ static s8 gtp_i2c_test(struct i2c_client *client)
  */
 static s8 gtp_request_irq(struct goodix_ts_data *ts)
 {
-	s32 ret = -1;
+	s32 ret;
 	const u8 irq_table[] = GTP_IRQ_TAB;
 
 	ret  = devm_request_threaded_irq(&ts->client->dev,
@@ -343,7 +343,7 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
  */
 static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 {
-	s8 ret = -1;
+	s8 ret;
 	s8 phys[32];
 
 	ts->input_dev = devm_input_allocate_device(&ts->client->dev);
@@ -382,7 +382,7 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 static int goodix_ts_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
-	s32 ret = -1;
+	s32 ret;
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
