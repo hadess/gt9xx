@@ -42,11 +42,6 @@ struct goodix_ts_data {
 	unsigned int int_trigger_type;
 };
 
-#define GTP_IRQ_TAB		{IRQ_TYPE_EDGE_RISING, \
-				 IRQ_TYPE_EDGE_FALLING, \
-				 IRQ_TYPE_LEVEL_LOW, \
-				 IRQ_TYPE_LEVEL_HIGH}
-
 #define GTP_MAX_HEIGHT		4096
 #define GTP_MAX_WIDTH		4096
 #define GTP_INT_TRIGGER		1
@@ -70,6 +65,12 @@ struct goodix_ts_data {
 #define GTP_ERROR(fmt, arg...)	pr_err("<<-GTP-ERROR->> "fmt"\n", ##arg)
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
+static const unsigned long gtp_irq_flags[] = {
+	IRQ_TYPE_EDGE_RISING  | IRQF_ONESHOT,
+	IRQ_TYPE_EDGE_FALLING | IRQF_ONESHOT,
+	IRQ_TYPE_LEVEL_LOW    | IRQF_ONESHOT,
+	IRQ_TYPE_LEVEL_HIGH   | IRQF_ONESHOT
+};
 
 /**
  * gtp_i2c_read - read data from a register of the i2c slave device.
@@ -317,14 +318,13 @@ static int gtp_i2c_test(struct i2c_client *client)
 static int gtp_request_irq(struct goodix_ts_data *ts)
 {
 	int ret;
-	const u8 irq_table[] = GTP_IRQ_TAB;
 
 	ret = devm_request_threaded_irq(&ts->client->dev,
-			ts->client->irq, NULL,
-			goodix_ts_irq_handler,
-			irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
-			ts->client->name,
-			ts);
+					ts->client->irq, NULL,
+					goodix_ts_irq_handler,
+					gtp_irq_flags[ts->int_trigger_type],
+					ts->client->name,
+					ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed! ERRNO:%d.", ret);
 		return -1;
