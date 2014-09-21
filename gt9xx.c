@@ -302,7 +302,7 @@ static s8 gtp_i2c_test(struct i2c_client *client)
 			return ret;
 
 		GTP_ERROR("GTP i2c test failed time %d.", retry);
-		msleep(10);
+		msleep(20);
 	}
 	return ret;
 }
