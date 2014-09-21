@@ -105,23 +105,32 @@ static int gtp_i2c_read(struct i2c_client *client, u16 reg, u8 *buf, s32 len)
  * gtp_i2c_write - write data to the i2c slave device.
  *
  * @client: i2c device.
+ * @reg: the register to read to.
  * @buf: raw write data buffer.
  * @len: lenght of the buffer to write
- *
- * The function does not take the destination register as a parameter.
- * The caller is in charge of setting the register properly in the first bytes
- * of buf.
  */
-static int gtp_i2c_write(struct i2c_client *client, u8 *buf, s32 len)
+static int gtp_i2c_write(struct i2c_client *client, u16 reg, u8 *buf, s32 len)
 {
 	struct i2c_msg msg;
+	int ret;
+	u8 *wbuf;
+
+	wbuf = kzalloc(len + 2, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	wbuf[0] = reg >> 8;
+	wbuf[1] = reg & 0xFF;
+	memcpy(&wbuf[2], buf, len);
 
 	msg.flags = !I2C_M_RD;
 	msg.addr  = client->addr;
-	msg.len   = len;
-	msg.buf   = buf;
+	msg.len   = len + 2;
+	msg.buf   = wbuf;
 
-	return i2c_transfer(client->adapter, &msg, 1);
+	ret = i2c_transfer(client->adapter, &msg, 1);
+	kfree(wbuf);
+	return ret;
 }
 
 static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
@@ -179,8 +188,7 @@ static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8* coor_data)
  */
 static void goodix_ts_work_func(struct goodix_ts_data *ts)
 {
-	u8  end_cmd[3] = {
-			GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF, 0};
+	u8  end_cmd[1] = {0};
 	u8  point_data[1 + 8 * GTP_MAX_TOUCH + 1];
 	int touch_num;
 	int i;
@@ -197,7 +205,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 
 exit_work_func:
 
-	if (gtp_i2c_write(ts->client, end_cmd, 3) < 0)
+	if (gtp_i2c_write(ts->client, GTP_READ_COOR_ADDR, end_cmd, 1) < 0)
 		GTP_INFO("I2C write end_cmd  error!");
 }
 
