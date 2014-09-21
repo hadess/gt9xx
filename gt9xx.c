@@ -1,25 +1,17 @@
-/* drivers/input/touchscreen/gt9xx.c
+/*
+ *  driver for Goodix Touchscreens
  *
- * 2010 - 2012 Goodix Technology.
+ *  Copyright (c) 2014 Red Hat Inc.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ *  This code is based on gt9xx.c authored by andrew@goodix.com:
  *
- * This program is distributed in the hope that it will be a reference
- * to you, when you are integrating the GOODiX's CTP IC into your system,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * Version:1.2
- * Author:andrew@goodix.com
- * Release Date:2012/10/15
- * Revision record:
- *	  V1.0:2012/08/31,first Release
- *	  V1.2:2012/10/15,modify gtp_reset_guitar,slot report,tracking_id & 0x0F
- *
+ *  2010 - 2012 Goodix Technology.
+ */
+
+/*
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; version 2 of the License.
  */
 
 #include <linux/kernel.h>
@@ -47,8 +39,6 @@ struct goodix_ts_data {
 #define GTP_INT_TRIGGER		1
 #define GTP_MAX_TOUCH		10
 
-#define GTP_DRIVER_VERSION	"V1.3<2014/09/18>"
-#define GTP_I2C_NAME		"Goodix9110-TS"
 #define GTP_CONFIG_MAX_LENGTH	240
 
 /* Register defineS */
@@ -385,7 +375,6 @@ static int goodix_ts_probe(struct i2c_client *client,
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	GTP_INFO("GTP Driver Version: %s", GTP_DRIVER_VERSION);
 	GTP_INFO("GTP I2C Address: 0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
@@ -436,7 +425,6 @@ static int goodix_ts_probe(struct i2c_client *client,
 }
 
 static const struct i2c_device_id goodix_ts_id[] = {
-	{ GTP_I2C_NAME, 0 },
 	{ "GDIX1001:00", 0 },
 	{ }
 };
@@ -451,7 +439,7 @@ static struct i2c_driver goodix_ts_driver = {
 	.probe = goodix_ts_probe,
 	.id_table = goodix_ts_id,
 	.driver = {
-		.name = GTP_I2C_NAME,
+		.name = "Goodix-TS",
 		.owner = THIS_MODULE,
 		.acpi_match_table = goodix_acpi_match,
 	},
@@ -459,5 +447,7 @@ static struct i2c_driver goodix_ts_driver = {
 
 module_i2c_driver(goodix_ts_driver);
 
+MODULE_AUTHOR("Benjamin Tissoires <benjamin.tissoires@gmail.com>");
+MODULE_AUTHOR("Bastien Nocera <hadess@hadess.net>");
 MODULE_DESCRIPTION("GTP Series Driver");
 MODULE_LICENSE("GPL");
