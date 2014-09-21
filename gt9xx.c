@@ -42,8 +42,6 @@ struct goodix_ts_data {
 	u8 int_trigger_type;
 };
 
-#define GTP_DEBUG_ON		0
-
 #define GTP_IRQ_TAB		{IRQ_TYPE_EDGE_RISING, \
 				 IRQ_TYPE_EDGE_FALLING, \
 				 IRQ_TYPE_LEVEL_LOW, \
@@ -70,10 +68,6 @@ struct goodix_ts_data {
 
 #define GTP_INFO(fmt,arg...)		pr_info("<<-GTP-INFO->> "fmt"\n",##arg)
 #define GTP_ERROR(fmt,arg...)		pr_err("<<-GTP-ERROR->> "fmt"\n",##arg)
-#define GTP_DEBUG(fmt,arg...)		do{\
-						if (GTP_DEBUG_ON)\
-							pr_debug("<<-GTP-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
-					}while(0)
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 
 /**
@@ -257,9 +251,6 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
 	}
 
 	msleep(500);
-
-	GTP_DEBUG("X_MAX = %d,Y_MAX = %d,TRIGGER = 0x%02x",
-			 ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
 }
 
 
@@ -327,8 +318,6 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 {
 	s32 ret = -1;
 	const u8 irq_table[] = GTP_IRQ_TAB;
-
-	GTP_DEBUG("INT trigger type:%x", ts->int_trigger_type);
 
 	ret  = devm_request_threaded_irq(&ts->client->dev,
 					 ts->client->irq, NULL,
