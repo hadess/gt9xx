@@ -66,8 +66,9 @@ struct goodix_ts_data {
 #define RESOLUTION_LOC		1
 #define TRIGGER_LOC		6
 
-#define GTP_INFO(fmt,arg...)		pr_info("<<-GTP-INFO->> "fmt"\n",##arg)
-#define GTP_ERROR(fmt,arg...)		pr_err("<<-GTP-ERROR->> "fmt"\n",##arg)
+#define GTP_INFO(fmt, arg...)	pr_info("<<-GTP-INFO->> "fmt"\n", ##arg)
+#define GTP_ERROR(fmt, arg...)	pr_err("<<-GTP-ERROR->> "fmt"\n", ##arg)
+
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 
 /**
@@ -158,12 +159,12 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	return touch_num;
 }
 
-static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8* coor_data)
+static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8 *coor_data)
 {
 	int id = coor_data[0] & 0x0F;
-	int input_x  = get_unaligned_le16(&coor_data[1]);
-	int input_y  = get_unaligned_le16(&coor_data[3]);
-	int input_w  = get_unaligned_le16(&coor_data[5]);
+	int input_x = get_unaligned_le16(&coor_data[1]);
+	int input_y = get_unaligned_le16(&coor_data[3]);
+	int input_w = get_unaligned_le16(&coor_data[5]);
 
 	input_mt_slot(ts->input_dev, id);
 	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
@@ -199,9 +200,8 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	input_sync(ts->input_dev);
 
 exit_work_func:
-
 	if (gtp_i2c_write(ts->client, GTP_READ_COOR_ADDR, end_cmd, 1) < 0)
-		GTP_INFO("I2C write end_cmd  error!");
+		GTP_INFO("I2C write end_cmd error");
 }
 
 /**
@@ -244,7 +244,7 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
 	ts->abs_x_max = get_unaligned_le16(&config[RESOLUTION_LOC]);
 	ts->abs_y_max = get_unaligned_le16(&config[RESOLUTION_LOC + 2]);
 	ts->int_trigger_type = (config[TRIGGER_LOC]) & 0x03;
-	if ((!ts->abs_x_max)||(!ts->abs_y_max)) {
+	if ((!ts->abs_x_max) || (!ts->abs_y_max)) {
 		GTP_ERROR("GTP resolution & max_touch_num invalid, use default value!");
 		ts->abs_x_max = GTP_MAX_WIDTH;
 		ts->abs_y_max = GTP_MAX_HEIGHT;
@@ -260,7 +260,7 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
  * @client: the i2c client
  * @version: output buffer containing the version on success
  */
-static s32 gtp_read_version(struct i2c_client *client, u16* version)
+static s32 gtp_read_version(struct i2c_client *client, u16 *version)
 {
 	s32 ret;
 	s32 i;
@@ -275,11 +275,11 @@ static s32 gtp_read_version(struct i2c_client *client, u16* version)
 	if (version)
 		*version = get_unaligned_le16(&buf[4]);
 
-	for(i=0; i<4; i++) {
+	for (i = 0; i < 4; i++) {
 		if (!buf[i])
 			buf[i] = 0x30;
 	}
-	GTP_INFO("IC VERSION:%c%c%c%c_%02x%02x",
+	GTP_INFO("IC VERSION: %c%c%c%c_%02x%02x",
 			  buf[0], buf[1], buf[2], buf[3], buf[5], buf[4]);
 
 	return ret;
@@ -301,7 +301,7 @@ static s8 gtp_i2c_test(struct i2c_client *client)
 		if (ret > 0)
 			return ret;
 
-		GTP_ERROR("GTP i2c test failed time %d.",retry);
+		GTP_ERROR("GTP i2c test failed time %d.", retry);
 		msleep(10);
 	}
 	return ret;
@@ -319,14 +319,14 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 	s32 ret;
 	const u8 irq_table[] = GTP_IRQ_TAB;
 
-	ret  = devm_request_threaded_irq(&ts->client->dev,
-					 ts->client->irq, NULL,
-					 goodix_ts_irq_handler,
-					 irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
-					 ts->client->name,
-					 ts);
+	ret = devm_request_threaded_irq(&ts->client->dev,
+					ts->client->irq, NULL,
+					goodix_ts_irq_handler,
+					irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
+					ts->client->name,
+					ts);
 	if (ret) {
-		GTP_ERROR("Request IRQ failed!ERRNO:%d.", ret);
+		GTP_ERROR("Request IRQ failed! ERRNO:%d.", ret);
 		return -1;
 	}
 
@@ -352,7 +352,7 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 		return -ENOMEM;
 	}
 
-	ts->input_dev->evbit[0] = BIT_MASK(EV_SYN) | BIT_MASK(EV_KEY) | BIT_MASK(EV_ABS) ;
+	ts->input_dev->evbit[0] = BIT_MASK(EV_SYN) | BIT_MASK(EV_KEY) | BIT_MASK(EV_ABS);
 
 	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
@@ -372,7 +372,8 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 
 	ret = input_register_device(ts->input_dev);
 	if (ret) {
-		GTP_ERROR("Register %s input device failed", ts->input_dev->name);
+		GTP_ERROR("Failed to register %s input device",
+			  ts->input_dev->name);
 		return -ENODEV;
 	}
 
@@ -386,8 +387,8 @@ static int goodix_ts_probe(struct i2c_client *client,
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	GTP_INFO("GTP Driver Version:%s", GTP_DRIVER_VERSION);
-	GTP_INFO("GTP I2C Address:0x%02x", client->addr);
+	GTP_INFO("GTP Driver Version: %s", GTP_DRIVER_VERSION);
+	GTP_INFO("GTP I2C Address: 0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		GTP_ERROR("I2C check functionality failed.");
@@ -410,7 +411,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 			GTP_ERROR("I2C communication ERROR!");
 			return -ENODEV;
 		}
-		GTP_INFO("GTP I2C new Address:0x%02x", client->addr);
+		GTP_INFO("GTP I2C new Address: 0x%02x", client->addr);
 	}
 
 	gtp_init_panel(ts);
