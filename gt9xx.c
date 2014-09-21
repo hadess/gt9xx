@@ -234,7 +234,7 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
 	ret = gtp_i2c_read(ts->client, GTP_REG_CONFIG_DATA, config,
 			   GTP_CONFIG_MAX_LENGTH);
 	if (ret < 0) {
-		GTP_ERROR("GTP read resolution & max_touch_num failed, use default value!");
+		GTP_ERROR("Error reading config, use default value!");
 		ts->abs_x_max = GTP_MAX_WIDTH;
 		ts->abs_y_max = GTP_MAX_HEIGHT;
 		ts->int_trigger_type = GTP_INT_TRIGGER;
@@ -245,7 +245,7 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
 	ts->abs_y_max = get_unaligned_le16(&config[RESOLUTION_LOC + 2]);
 	ts->int_trigger_type = (config[TRIGGER_LOC]) & 0x03;
 	if ((!ts->abs_x_max) || (!ts->abs_y_max)) {
-		GTP_ERROR("GTP resolution & max_touch_num invalid, use default value!");
+		GTP_ERROR("Invalid config, use default value!");
 		ts->abs_x_max = GTP_MAX_WIDTH;
 		ts->abs_y_max = GTP_MAX_HEIGHT;
 	}
@@ -320,11 +320,11 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
 	const u8 irq_table[] = GTP_IRQ_TAB;
 
 	ret = devm_request_threaded_irq(&ts->client->dev,
-					ts->client->irq, NULL,
-					goodix_ts_irq_handler,
-					irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
-					ts->client->name,
-					ts);
+			ts->client->irq, NULL,
+			goodix_ts_irq_handler,
+			irq_table[ts->int_trigger_type] | IRQF_ONESHOT,
+			ts->client->name,
+			ts);
 	if (ret) {
 		GTP_ERROR("Request IRQ failed! ERRNO:%d.", ret);
 		return -1;
@@ -352,10 +352,14 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 		return -ENOMEM;
 	}
 
-	ts->input_dev->evbit[0] = BIT_MASK(EV_SYN) | BIT_MASK(EV_KEY) | BIT_MASK(EV_ABS);
+	ts->input_dev->evbit[0] = BIT_MASK(EV_SYN) |
+				  BIT_MASK(EV_KEY) |
+				  BIT_MASK(EV_ABS);
 
-	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max, 0, 0);
-	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
+	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max,
+				0, 0);
+	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max,
+				0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
 
