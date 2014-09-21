@@ -36,10 +36,10 @@
 struct goodix_ts_data {
 	struct i2c_client *client;
 	struct input_dev *input_dev;
-	u16 abs_x_max;
-	u16 abs_y_max;
-	u8 max_touch_num;
-	u8 int_trigger_type;
+	int abs_x_max;
+	int abs_y_max;
+	unsigned int max_touch_num;
+	unsigned int int_trigger_type;
 };
 
 #define GTP_IRQ_TAB		{IRQ_TYPE_EDGE_RISING, \
@@ -79,7 +79,7 @@ static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
  * @buf: raw write data buffer.
  * @len: lenght of the buffer to write
  */
-static int gtp_i2c_read(struct i2c_client *client, u16 reg, u8 *buf, s32 len)
+static int gtp_i2c_read(struct i2c_client *client, u16 reg, u8 *buf, int len)
 {
 	struct i2c_msg msgs[2];
 	u8 wbuf[2] = { reg >> 8, reg & 0xff };
@@ -105,7 +105,7 @@ static int gtp_i2c_read(struct i2c_client *client, u16 reg, u8 *buf, s32 len)
  * @buf: raw write data buffer.
  * @len: lenght of the buffer to write
  */
-static int gtp_i2c_write(struct i2c_client *client, u16 reg, u8 *buf, s32 len)
+static int gtp_i2c_write(struct i2c_client *client, u16 reg, u8 *buf, int len)
 {
 	struct i2c_msg msg;
 	int ret;
@@ -228,7 +228,7 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
  */
 static void gtp_init_panel(struct goodix_ts_data *ts)
 {
-	s32 ret;
+	int ret;
 	u8 config[GTP_CONFIG_MAX_LENGTH];
 
 	ret = gtp_i2c_read(ts->client, GTP_REG_CONFIG_DATA, config,
@@ -260,10 +260,10 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
  * @client: the i2c client
  * @version: output buffer containing the version on success
  */
-static s32 gtp_read_version(struct i2c_client *client, u16 *version)
+static int gtp_read_version(struct i2c_client *client, u16 *version)
 {
-	s32 ret;
-	s32 i;
+	int ret;
+	int i;
 	u8 buf[6];
 
 	ret = gtp_i2c_read(client, GTP_REG_VERSION, buf, sizeof(buf));
@@ -290,11 +290,11 @@ static s32 gtp_read_version(struct i2c_client *client, u16 *version)
  *
  * @client: the i2c client
  */
-static s8 gtp_i2c_test(struct i2c_client *client)
+static int gtp_i2c_test(struct i2c_client *client)
 {
 	u8 test;
-	s8 ret;
-	u8 retry = 0;
+	int ret;
+	int retry = 0;
 
 	while (retry++ < 2) {
 		ret = gtp_i2c_read(client, GTP_REG_CONFIG_DATA, &test, 1);
@@ -314,9 +314,9 @@ static s8 gtp_i2c_test(struct i2c_client *client)
  *
  * Must be called during probe
  */
-static s8 gtp_request_irq(struct goodix_ts_data *ts)
+static int gtp_request_irq(struct goodix_ts_data *ts)
 {
-	s32 ret;
+	int ret;
 	const u8 irq_table[] = GTP_IRQ_TAB;
 
 	ret = devm_request_threaded_irq(&ts->client->dev,
@@ -341,10 +341,9 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
  *
  * Must be called during probe
  */
-static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
+static int gtp_request_input_dev(struct goodix_ts_data *ts)
 {
-	s8 ret;
-	s8 phys[32];
+	int ret;
 
 	ts->input_dev = devm_input_allocate_device(&ts->client->dev);
 	if (ts->input_dev == NULL) {
@@ -366,9 +365,8 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 	input_mt_init_slots(ts->input_dev, GTP_MAX_TOUCH,
 			    INPUT_MT_DIRECT | INPUT_MT_DROP_UNUSED);
 
-	sprintf(phys, "input/ts");
 	ts->input_dev->name = goodix_ts_name;
-	ts->input_dev->phys = phys;
+	ts->input_dev->phys = "input/ts";
 	ts->input_dev->id.bustype = BUS_I2C;
 	ts->input_dev->id.vendor = 0xDEAD;
 	ts->input_dev->id.product = 0xBEEF;
@@ -387,7 +385,7 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 static int goodix_ts_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
-	s32 ret;
+	int ret;
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
