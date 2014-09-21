@@ -248,8 +248,6 @@ static void gtp_init_panel(struct goodix_ts_data *ts)
 		ts->abs_x_max = GTP_MAX_WIDTH;
 		ts->abs_y_max = GTP_MAX_HEIGHT;
 	}
-
-	msleep(500);
 }
 
 
