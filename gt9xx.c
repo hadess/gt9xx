@@ -124,6 +124,51 @@ static int gtp_i2c_write(struct i2c_client *client, u8 *buf, s32 len)
 	return i2c_transfer(client->adapter, &msg, 1);
 }
 
+static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
+{
+	int touch_num;
+	int ret;
+
+	ret = gtp_i2c_read(ts->client, GTP_READ_COOR_ADDR, data, 10);
+	if (ret < 0) {
+		/* If touchscreen is reset for any reason,
+		 * the i2c address maybe changed */
+		if (ts->client->addr == 0x14)
+			ts->client->addr = 0x5d;
+		else
+			ts->client->addr = 0x14;
+
+		GTP_ERROR("I2C transfer error (%d), change i2c address to %d\n",
+			  ret, ts->client->addr);
+		return -EIO;
+	}
+
+	touch_num = data[0] & 0x0f;
+	if (touch_num > GTP_MAX_TOUCH)
+		return -EPROTO;
+
+	if (touch_num > 1)
+		ret = gtp_i2c_read(ts->client, GTP_READ_COOR_ADDR + 10,
+				   &data[10], 8 * (touch_num - 1));
+
+	return touch_num;
+}
+
+static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8* coor_data)
+{
+	int id = coor_data[0] & 0x0F;
+	int input_x  = coor_data[1] | coor_data[2] << 8;
+	int input_y  = coor_data[3] | coor_data[4] << 8;
+	int input_w  = coor_data[5] | coor_data[6] << 8;
+
+	input_mt_slot(ts->input_dev, id);
+	input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, true);
+	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, input_x);
+	input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, input_y);
+	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, input_w);
+	input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, input_w);
+}
+
 /**
  * goodix_ts_work_func - Process incoming IRQ
  *
@@ -137,94 +182,22 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	u8  end_cmd[3] = {
 			GTP_READ_COOR_ADDR >> 8, GTP_READ_COOR_ADDR & 0xFF, 0};
 	u8  point_data[1 + 8 * GTP_MAX_TOUCH + 1];
-	bool touch_state;
-	u8 touch_num;
-	u8 finger;
-	static u16 pre_touch = 0;
-	u8* coor_data = NULL;
-	int input_x;
-	int input_y;
-	int input_w;
-	int id = 0;
+	int touch_num;
 	int i;
-	int ret;
 
-	ret = gtp_i2c_read(ts->client, GTP_READ_COOR_ADDR, point_data, 10);
-	if (ret < 0) {
-		/* If touchscreen is reset for any reason, the i2c address maybe changed */
-		if (ts->client->addr == 0x14)
-			ts->client->addr = 0x5d;
-		else
-			ts->client->addr = 0x14;
-
-		GTP_ERROR("I2C transfer error. errno:%d , change i2c address as %d\n ", ret,ts->client->addr);
-		goto exit_work_func;
-	}
-
-	finger = point_data[0];
-	if ((finger & 0x80) == 0)
+	touch_num = goodix_ts_read_input_report(ts, point_data);
+	if (touch_num < 0)
 		goto exit_work_func;
 
-	touch_num = finger & 0x0f;
-	if (touch_num > GTP_MAX_TOUCH)
-		goto exit_work_func;
-
-	if (touch_num > 1)
-		ret = gtp_i2c_read(ts->client, GTP_READ_COOR_ADDR + 10,
-				   &point_data[10], 8 * (touch_num - 1));
-
-	GTP_DEBUG("pre_touch:%02x, finger:%02x.", pre_touch, finger);
-
-	if (pre_touch || touch_num) {
-		s32 pos = 0;
-		u16 touch_index = 0;
-
-		coor_data = &point_data[1];
-		if (touch_num) {
-			id = coor_data[pos] & 0x0F;
-			touch_index |= (0x01<<id);
-		}
-
-		GTP_DEBUG("id=%d,touch_index=0x%x,pre_touch=0x%x\n",id, touch_index,pre_touch);
-		for (i = 0; i < GTP_MAX_TOUCH; i++) {
-			touch_state = touch_index & (0x01 << i);
-			if (touch_state) {
-				input_x  = coor_data[pos + 1] | coor_data[pos + 2] << 8;
-				input_y  = coor_data[pos + 3] | coor_data[pos + 4] << 8;
-				input_w  = coor_data[pos + 5] | coor_data[pos + 6] << 8;
-
-				input_mt_slot(ts->input_dev, id);
-				input_mt_report_slot_state(ts->input_dev,
-						MT_TOOL_FINGER, touch_state);
-				input_report_abs(ts->input_dev,
-						ABS_MT_POSITION_X, input_x);
-				input_report_abs(ts->input_dev,
-						ABS_MT_POSITION_Y, input_y);
-				input_report_abs(ts->input_dev,
-						ABS_MT_TOUCH_MAJOR, input_w);
-				input_report_abs(ts->input_dev,
-						ABS_MT_WIDTH_MAJOR, input_w);
-				pre_touch |= 0x01 << i;
-
-				pos += 8;
-				id = coor_data[pos] & 0x0F;
-				touch_index |= (0x01 << id);
-			} else {
-				input_mt_slot(ts->input_dev, i);
-				input_mt_report_slot_state(ts->input_dev,
-						MT_TOOL_FINGER, touch_state);
-				pre_touch &= ~(0x01 << i);
-			}
-		}
-	}
+	for (i = 0; i < touch_num; i++)
+		goodix_ts_parse_touch(ts, &point_data[1 + 8 * i]);
 
 	input_mt_sync_frame(ts->input_dev);
 	input_sync(ts->input_dev);
 
 exit_work_func:
 
-	ret = gtp_i2c_write(ts->client, end_cmd, 3);
-	if (ret < 0)
+	if (gtp_i2c_write(ts->client, end_cmd, 3) < 0)
 		GTP_INFO("I2C write end_cmd  error!");
 }
 
@@ -388,7 +361,8 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 	input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
 
-	input_mt_init_slots(ts->input_dev, GTP_MAX_TOUCH, INPUT_MT_DIRECT);
+	input_mt_init_slots(ts->input_dev, GTP_MAX_TOUCH,
+			    INPUT_MT_DIRECT | INPUT_MT_DROP_UNUSED);
 
 	sprintf(phys, "input/ts");
 	ts->input_dev->name = goodix_ts_name;
