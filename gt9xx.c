@@ -53,7 +53,7 @@ struct goodix_ts_data {
 #define GTP_ERROR(fmt, arg...)	pr_err("<<-GTP-ERROR->> "fmt"\n", ##arg)
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
-static const unsigned long gtp_irq_flags[] = {
+static const unsigned long goodix_irq_flags[] = {
 	IRQ_TYPE_EDGE_RISING  | IRQF_ONESHOT,
 	IRQ_TYPE_EDGE_FALLING | IRQF_ONESHOT,
 	IRQ_TYPE_LEVEL_LOW    | IRQF_ONESHOT,
@@ -61,14 +61,15 @@ static const unsigned long gtp_irq_flags[] = {
 };
 
 /**
- * gtp_i2c_read - read data from a register of the i2c slave device.
+ * goodix_i2c_read - read data from a register of the i2c slave device.
  *
  * @client: i2c device.
  * @reg: the register to read from.
  * @buf: raw write data buffer.
  * @len: lenght of the buffer to write
  */
-static int gtp_i2c_read(struct i2c_client *client, u16 reg, u8 *buf, int len)
+static int goodix_i2c_read(struct i2c_client *client,
+				u16 reg, u8 *buf, int len)
 {
 	struct i2c_msg msgs[2];
 	u8 wbuf[2] = { reg >> 8, reg & 0xff };
@@ -87,14 +88,15 @@ static int gtp_i2c_read(struct i2c_client *client, u16 reg, u8 *buf, int len)
 }
 
 /**
- * gtp_i2c_write - write data to the i2c slave device.
+ * goodix_i2c_write - write data to the i2c slave device.
  *
  * @client: i2c device.
  * @reg: the register to read to.
  * @buf: raw write data buffer.
  * @len: lenght of the buffer to write
  */
-static int gtp_i2c_write(struct i2c_client *client, u16 reg, u8 *buf, int len)
+static int goodix_i2c_write(struct i2c_client *client,
+				u16 reg, u8 *buf, int len)
 {
 	struct i2c_msg msg;
 	int ret;
@@ -123,7 +125,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	int touch_num;
 	int ret;
 
-	ret = gtp_i2c_read(ts->client, GTP_READ_COOR_ADDR, data, 10);
+	ret = goodix_i2c_read(ts->client, GTP_READ_COOR_ADDR, data, 10);
 	if (ret < 0) {
 		GTP_ERROR("I2C transfer error (%d)\n", ret);
 		return -EIO;
@@ -134,7 +136,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 		return -EPROTO;
 
 	if (touch_num > 1)
-		ret = gtp_i2c_read(ts->client, GTP_READ_COOR_ADDR + 10,
+		ret = goodix_i2c_read(ts->client, GTP_READ_COOR_ADDR + 10,
 				   &data[10], 8 * (touch_num - 1));
 
 	return touch_num;
@@ -181,7 +183,7 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	input_sync(ts->input_dev);
 
 exit_work_func:
-	if (gtp_i2c_write(ts->client, GTP_READ_COOR_ADDR, end_cmd, 1) < 0)
+	if (goodix_i2c_write(ts->client, GTP_READ_COOR_ADDR, end_cmd, 1) < 0)
 		GTP_INFO("I2C write end_cmd error");
 }
 
@@ -201,18 +203,18 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 }
 
 /**
- * gtp_read_config - Read the embedded configuration of the panel
+ * goodix_read_config - Read the embedded configuration of the panel
  *
  * @ts: our goodix_ts_data pointer
  *
  * Must be called during probe
  */
-static void gtp_read_config(struct goodix_ts_data *ts)
+static void goodix_read_config(struct goodix_ts_data *ts)
 {
 	int ret;
 	u8 config[GTP_CONFIG_MAX_LENGTH];
 
-	ret = gtp_i2c_read(ts->client, GTP_REG_CONFIG_DATA, config,
+	ret = goodix_i2c_read(ts->client, GTP_REG_CONFIG_DATA, config,
 			   GTP_CONFIG_MAX_LENGTH);
 	if (ret < 0) {
 		GTP_ERROR("Error reading config, use default value!");
@@ -234,18 +236,18 @@ static void gtp_read_config(struct goodix_ts_data *ts)
 
 
 /**
- * gtp_read_version - Read goodix touchscreen version
+ * goodix_read_version - Read goodix touchscreen version
  *
  * @client: the i2c client
  * @version: output buffer containing the version on success
  */
-static int gtp_read_version(struct i2c_client *client, u16 *version)
+static int goodix_read_version(struct i2c_client *client, u16 *version)
 {
 	int ret;
 	int i;
 	u8 buf[6];
 
-	ret = gtp_i2c_read(client, GTP_REG_VERSION, buf, sizeof(buf));
+	ret = goodix_i2c_read(client, GTP_REG_VERSION, buf, sizeof(buf));
 	if (ret < 0) {
 		GTP_ERROR("GTP read version failed");
 		return ret;
@@ -265,18 +267,18 @@ static int gtp_read_version(struct i2c_client *client, u16 *version)
 }
 
 /**
- * gtp_i2c_test - I2C test function to check if the device answers.
+ * goodix_i2c_test - I2C test function to check if the device answers.
  *
  * @client: the i2c client
  */
-static int gtp_i2c_test(struct i2c_client *client)
+static int goodix_i2c_test(struct i2c_client *client)
 {
 	u8 test;
 	int ret;
 	int retry = 0;
 
 	while (retry++ < 2) {
-		ret = gtp_i2c_read(client, GTP_REG_CONFIG_DATA, &test, 1);
+		ret = goodix_i2c_read(client, GTP_REG_CONFIG_DATA, &test, 1);
 		if (ret > 0)
 			return ret;
 
@@ -287,20 +289,20 @@ static int gtp_i2c_test(struct i2c_client *client)
 }
 
 /**
- * gtp_request_irq - Request the IRQ handler
+ * goodix_request_irq - Request the IRQ handler
  *
  * @ts: our goodix_ts_data pointer
  *
  * Must be called during probe
  */
-static int gtp_request_irq(struct goodix_ts_data *ts)
+static int goodix_request_irq(struct goodix_ts_data *ts)
 {
 	int ret;
 
 	ret = devm_request_threaded_irq(&ts->client->dev,
 					ts->client->irq, NULL,
 					goodix_ts_irq_handler,
-					gtp_irq_flags[ts->int_trigger_type],
+					goodix_irq_flags[ts->int_trigger_type],
 					ts->client->name,
 					ts);
 	if (ret) {
@@ -313,13 +315,13 @@ static int gtp_request_irq(struct goodix_ts_data *ts)
 }
 
 /**
- * gtp_request_input_dev - Allocate, populate and register the input device
+ * goodix_request_input_dev - Allocate, populate and register the input device
  *
  * @ts: our goodix_ts_data pointer
  *
  * Must be called during probe
  */
-static int gtp_request_input_dev(struct goodix_ts_data *ts)
+static int goodix_request_input_dev(struct goodix_ts_data *ts)
 {
 	int ret;
 
@@ -382,10 +384,10 @@ static int goodix_ts_probe(struct i2c_client *client,
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
 
-	ret = gtp_i2c_test(client);
+	ret = goodix_i2c_test(client);
 	if (ret < 0) {
 		client->addr = 0x5d;
-		ret = gtp_i2c_test(client);
+		ret = goodix_i2c_test(client);
 		if (ret < 0) {
 			GTP_ERROR("I2C communication ERROR!");
 			return -ENODEV;
@@ -393,19 +395,19 @@ static int goodix_ts_probe(struct i2c_client *client,
 		GTP_INFO("GTP I2C new Address: 0x%02x", client->addr);
 	}
 
-	gtp_read_config(ts);
+	goodix_read_config(ts);
 
-	ret = gtp_request_input_dev(ts);
+	ret = goodix_request_input_dev(ts);
 	if (ret < 0) {
 		GTP_ERROR("GTP request input dev failed");
 		return ret;
 	}
 
-	ret = gtp_request_irq(ts);
+	ret = goodix_request_irq(ts);
 	if (ret < 0)
 		return ret;
 
-	ret = gtp_read_version(client, &version_info);
+	ret = goodix_read_version(client, &version_info);
 	if (ret < 0) {
 		GTP_ERROR("Read version failed.");
 		return ret;
