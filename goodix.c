@@ -448,5 +448,5 @@ module_i2c_driver(goodix_ts_driver);
 
 MODULE_AUTHOR("Benjamin Tissoires <benjamin.tissoires@gmail.com>");
 MODULE_AUTHOR("Bastien Nocera <hadess@hadess.net>");
-MODULE_DESCRIPTION("GTP Series Driver");
+MODULE_DESCRIPTION("Goodix touchscreen driver");
 MODULE_LICENSE("GPL v2");
