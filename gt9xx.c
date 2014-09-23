@@ -337,10 +337,10 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 				  BIT_MASK(EV_KEY) |
 				  BIT_MASK(EV_ABS);
 
-	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max,
-				0, 0);
-	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max,
-				0, 0);
+	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0,
+				ts->abs_x_max, 0, 0);
+	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0,
+				ts->abs_y_max, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
 
