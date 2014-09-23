@@ -1,6 +1,6 @@
-MODULE_NAME := gt9xx_backport
+MODULE_NAME := goodix_backport
 
-MODULE_FILENAME := gt9xx
+MODULE_FILENAME := goodix
 
 LINUXINCLUDE := -I$(PWD)/include $(LINUXINCLUDE)
 
