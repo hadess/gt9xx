@@ -34,23 +34,23 @@ struct goodix_ts_data {
 	unsigned int int_trigger_type;
 };
 
-#define GTP_MAX_HEIGHT		4096
-#define GTP_MAX_WIDTH		4096
-#define GTP_INT_TRIGGER		1
-#define GTP_MAX_TOUCH		10
+#define GOODIX_MAX_HEIGHT		4096
+#define GOODIX_MAX_WIDTH		4096
+#define GOODIX_INT_TRIGGER		1
+#define GOODIX_MAX_TOUCH		10
 
-#define GTP_CONFIG_MAX_LENGTH	240
+#define GOODIX_CONFIG_MAX_LENGTH	240
 
 /* Register defineS */
-#define GTP_READ_COOR_ADDR	0x814E
-#define GTP_REG_CONFIG_DATA	0x8047
-#define GTP_REG_VERSION		0x8140
+#define GOODIX_READ_COOR_ADDR		0x814E
+#define GOODIX_REG_CONFIG_DATA		0x8047
+#define GOODIX_REG_VERSION		0x8140
 
 #define RESOLUTION_LOC		1
 #define TRIGGER_LOC		6
 
-#define GTP_INFO(fmt, arg...)	pr_info("<<-GTP-INFO->> "fmt"\n", ##arg)
-#define GTP_ERROR(fmt, arg...)	pr_err("<<-GTP-ERROR->> "fmt"\n", ##arg)
+#define GOODIX_INFO(fmt, arg...)       pr_info("<<-GTP-INFO->> "fmt"\n", ##arg)
+#define GOODIX_ERROR(fmt, arg...)      pr_err("<<-GTP-ERROR->> "fmt"\n", ##arg)
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 static const unsigned long goodix_irq_flags[] = {
@@ -125,18 +125,18 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	int touch_num;
 	int ret;
 
-	ret = goodix_i2c_read(ts->client, GTP_READ_COOR_ADDR, data, 10);
+	ret = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR, data, 10);
 	if (ret < 0) {
-		GTP_ERROR("I2C transfer error (%d)\n", ret);
+		GOODIX_ERROR("I2C transfer error (%d)\n", ret);
 		return -EIO;
 	}
 
 	touch_num = data[0] & 0x0f;
-	if (touch_num > GTP_MAX_TOUCH)
+	if (touch_num > GOODIX_MAX_TOUCH)
 		return -EPROTO;
 
 	if (touch_num > 1)
-		ret = goodix_i2c_read(ts->client, GTP_READ_COOR_ADDR + 10,
+		ret = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR + 10,
 				   &data[10], 8 * (touch_num - 1));
 
 	return touch_num;
@@ -168,7 +168,7 @@ static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8 *coor_data)
 static void goodix_ts_work_func(struct goodix_ts_data *ts)
 {
 	u8  end_cmd[1] = {0};
-	u8  point_data[1 + 8 * GTP_MAX_TOUCH + 1];
+	u8  point_data[1 + 8 * GOODIX_MAX_TOUCH + 1];
 	int touch_num;
 	int i;
 
@@ -183,8 +183,9 @@ static void goodix_ts_work_func(struct goodix_ts_data *ts)
 	input_sync(ts->input_dev);
 
 exit_work_func:
-	if (goodix_i2c_write(ts->client, GTP_READ_COOR_ADDR, end_cmd, 1) < 0)
-		GTP_INFO("I2C write end_cmd error");
+	if (goodix_i2c_write(ts->client,
+				GOODIX_READ_COOR_ADDR, end_cmd, 1) < 0)
+		GOODIX_INFO("I2C write end_cmd error");
 }
 
 /**
@@ -212,15 +213,15 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 static void goodix_read_config(struct goodix_ts_data *ts)
 {
 	int ret;
-	u8 config[GTP_CONFIG_MAX_LENGTH];
+	u8 config[GOODIX_CONFIG_MAX_LENGTH];
 
-	ret = goodix_i2c_read(ts->client, GTP_REG_CONFIG_DATA, config,
-			   GTP_CONFIG_MAX_LENGTH);
+	ret = goodix_i2c_read(ts->client, GOODIX_REG_CONFIG_DATA, config,
+			   GOODIX_CONFIG_MAX_LENGTH);
 	if (ret < 0) {
-		GTP_ERROR("Error reading config, use default value!");
-		ts->abs_x_max = GTP_MAX_WIDTH;
-		ts->abs_y_max = GTP_MAX_HEIGHT;
-		ts->int_trigger_type = GTP_INT_TRIGGER;
+		GOODIX_ERROR("Error reading config, use default value!");
+		ts->abs_x_max = GOODIX_MAX_WIDTH;
+		ts->abs_y_max = GOODIX_MAX_HEIGHT;
+		ts->int_trigger_type = GOODIX_INT_TRIGGER;
 		return;
 	}
 
@@ -228,9 +229,9 @@ static void goodix_read_config(struct goodix_ts_data *ts)
 	ts->abs_y_max = get_unaligned_le16(&config[RESOLUTION_LOC + 2]);
 	ts->int_trigger_type = (config[TRIGGER_LOC]) & 0x03;
 	if ((!ts->abs_x_max) || (!ts->abs_y_max)) {
-		GTP_ERROR("Invalid config, use default value!");
-		ts->abs_x_max = GTP_MAX_WIDTH;
-		ts->abs_y_max = GTP_MAX_HEIGHT;
+		GOODIX_ERROR("Invalid config, use default value!");
+		ts->abs_x_max = GOODIX_MAX_WIDTH;
+		ts->abs_y_max = GOODIX_MAX_HEIGHT;
 	}
 }
 
@@ -247,9 +248,9 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
 	int i;
 	u8 buf[6];
 
-	ret = goodix_i2c_read(client, GTP_REG_VERSION, buf, sizeof(buf));
+	ret = goodix_i2c_read(client, GOODIX_REG_VERSION, buf, sizeof(buf));
 	if (ret < 0) {
-		GTP_ERROR("GTP read version failed");
+		GOODIX_ERROR("GTP read version failed");
 		return ret;
 	}
 
@@ -260,7 +261,7 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
 		if (!buf[i])
 			buf[i] = 0x30;
 	}
-	GTP_INFO("IC VERSION: %c%c%c%c_%02x%02x",
+	GOODIX_INFO("IC VERSION: %c%c%c%c_%02x%02x",
 			  buf[0], buf[1], buf[2], buf[3], buf[5], buf[4]);
 
 	return ret;
@@ -278,11 +279,12 @@ static int goodix_i2c_test(struct i2c_client *client)
 	int retry = 0;
 
 	while (retry++ < 2) {
-		ret = goodix_i2c_read(client, GTP_REG_CONFIG_DATA, &test, 1);
+		ret = goodix_i2c_read(client, GOODIX_REG_CONFIG_DATA,
+				      &test, 1);
 		if (ret > 0)
 			return ret;
 
-		GTP_ERROR("GTP i2c test failed time %d.", retry);
+		GOODIX_ERROR("GTP i2c test failed time %d.", retry);
 		msleep(20);
 	}
 	return ret;
@@ -306,7 +308,7 @@ static int goodix_request_irq(struct goodix_ts_data *ts)
 					ts->client->name,
 					ts);
 	if (ret) {
-		GTP_ERROR("Request IRQ failed! ERRNO:%d.", ret);
+		GOODIX_ERROR("Request IRQ failed! ERRNO:%d.", ret);
 		return -1;
 	}
 
@@ -327,7 +329,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 
 	ts->input_dev = devm_input_allocate_device(&ts->client->dev);
 	if (ts->input_dev == NULL) {
-		GTP_ERROR("Failed to allocate input device.");
+		GOODIX_ERROR("Failed to allocate input device.");
 		return -ENOMEM;
 	}
 
@@ -342,7 +344,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 	input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
 
-	input_mt_init_slots(ts->input_dev, GTP_MAX_TOUCH,
+	input_mt_init_slots(ts->input_dev, GOODIX_MAX_TOUCH,
 			    INPUT_MT_DIRECT | INPUT_MT_DROP_UNUSED);
 
 	ts->input_dev->name = goodix_ts_name;
@@ -354,7 +356,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 
 	ret = input_register_device(ts->input_dev);
 	if (ret) {
-		GTP_ERROR("Failed to register %s input device",
+		GOODIX_ERROR("Failed to register %s input device",
 			  ts->input_dev->name);
 		return -ENODEV;
 	}
@@ -369,15 +371,15 @@ static int goodix_ts_probe(struct i2c_client *client,
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	GTP_INFO("GTP I2C Address: 0x%02x", client->addr);
+	GOODIX_INFO("GTP I2C Address: 0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
-		GTP_ERROR("I2C check functionality failed.");
+		GOODIX_ERROR("I2C check functionality failed.");
 		return -ENODEV;
 	}
 	ts = devm_kzalloc(&client->dev, sizeof(*ts), GFP_KERNEL);
 	if (ts == NULL) {
-		GTP_ERROR("Alloc GFP_KERNEL memory failed.");
+		GOODIX_ERROR("Alloc GFP_KERNEL memory failed.");
 		return -ENOMEM;
 	}
 
@@ -389,17 +391,17 @@ static int goodix_ts_probe(struct i2c_client *client,
 		client->addr = 0x5d;
 		ret = goodix_i2c_test(client);
 		if (ret < 0) {
-			GTP_ERROR("I2C communication ERROR!");
+			GOODIX_ERROR("I2C communication ERROR!");
 			return -ENODEV;
 		}
-		GTP_INFO("GTP I2C new Address: 0x%02x", client->addr);
+		GOODIX_INFO("GTP I2C new Address: 0x%02x", client->addr);
 	}
 
 	goodix_read_config(ts);
 
 	ret = goodix_request_input_dev(ts);
 	if (ret < 0) {
-		GTP_ERROR("GTP request input dev failed");
+		GOODIX_ERROR("GTP request input dev failed");
 		return ret;
 	}
 
@@ -409,7 +411,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 
 	ret = goodix_read_version(client, &version_info);
 	if (ret < 0) {
-		GTP_ERROR("Read version failed.");
+		GOODIX_ERROR("Read version failed.");
 		return ret;
 	}
 
