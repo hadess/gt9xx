@@ -125,15 +125,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 
 	ret = gtp_i2c_read(ts->client, GTP_READ_COOR_ADDR, data, 10);
 	if (ret < 0) {
-		/* If touchscreen is reset for any reason,
-		 * the i2c address maybe changed */
-		if (ts->client->addr == 0x14)
-			ts->client->addr = 0x5d;
-		else
-			ts->client->addr = 0x14;
-
-		GTP_ERROR("I2C transfer error (%d), change i2c address to %d\n",
-			  ret, ts->client->addr);
+		GTP_ERROR("I2C transfer error (%d)\n", ret);
 		return -EIO;
 	}
 
