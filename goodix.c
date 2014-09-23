@@ -135,9 +135,12 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	if (touch_num > GOODIX_MAX_TOUCH)
 		return -EPROTO;
 
-	if (touch_num > 1)
+	if (touch_num > 1) {
 		ret = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR + 10,
 				   &data[10], 8 * (touch_num - 1));
+		if (ret < 0)
+			return -EIO;
+	}
 
 	return touch_num;
 }
