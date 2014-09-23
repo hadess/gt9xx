@@ -128,7 +128,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	ret = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR, data, 10);
 	if (ret < 0) {
 		GOODIX_ERROR("I2C transfer error (%d)\n", ret);
-		return -EIO;
+		return ret;
 	}
 
 	touch_num = data[0] & 0x0f;
@@ -139,7 +139,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 		ret = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR + 10,
 				   &data[10], 8 * (touch_num - 1));
 		if (ret < 0)
-			return -EIO;
+			return ret;
 	}
 
 	return touch_num;
