@@ -66,7 +66,7 @@ static const unsigned long goodix_irq_flags[] = {
  * @client: i2c device.
  * @reg: the register to read from.
  * @buf: raw write data buffer.
- * @len: lenght of the buffer to write
+ * @len: length of the buffer to write
  */
 static int goodix_i2c_read(struct i2c_client *client,
 				u16 reg, u8 *buf, int len)
@@ -93,7 +93,7 @@ static int goodix_i2c_read(struct i2c_client *client,
  * @client: i2c device.
  * @reg: the register to read to.
  * @buf: raw write data buffer.
- * @len: lenght of the buffer to write
+ * @len: length of the buffer to write
  */
 static int goodix_i2c_write(struct i2c_client *client,
 				u16 reg, u8 *buf, int len)
