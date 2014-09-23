@@ -353,8 +353,8 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 	ts->input_dev->name = goodix_ts_name;
 	ts->input_dev->phys = "input/ts";
 	ts->input_dev->id.bustype = BUS_I2C;
-	ts->input_dev->id.vendor = 0xDEAD;
-	ts->input_dev->id.product = 0xBEEF;
+	ts->input_dev->id.vendor = 0x0416;
+	ts->input_dev->id.product = 0x1001;
 	ts->input_dev->id.version = 10427;
 
 	ret = input_register_device(ts->input_dev);
