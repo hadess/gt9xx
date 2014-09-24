@@ -71,7 +71,7 @@ static int goodix_i2c_read(struct i2c_client *client,
 	struct i2c_msg msgs[2];
 	u8 wbuf[2] = { reg >> 8, reg & 0xff };
 
-	msgs[0].flags = !I2C_M_RD;
+	msgs[0].flags = 0;
 	msgs[0].addr  = client->addr;
 	msgs[0].len   = 2;
 	msgs[0].buf   = wbuf;
@@ -107,7 +107,7 @@ static int goodix_i2c_write(struct i2c_client *client,
 	wbuf[1] = reg & 0xFF;
 	memcpy(&wbuf[2], buf, len);
 
-	msg.flags = !I2C_M_RD;
+	msg.flags = 0;
 	msg.addr  = client->addr;
 	msg.len   = len + 2;
 	msg.buf   = wbuf;
