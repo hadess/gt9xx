@@ -316,7 +316,6 @@ static int goodix_request_irq(struct goodix_ts_data *ts)
 		return -1;
 	}
 
-	disable_irq_nosync(ts->client->irq);
 	return 0;
 }
 
