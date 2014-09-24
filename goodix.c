@@ -285,7 +285,7 @@ static int goodix_i2c_test(struct i2c_client *client)
 	while (retry++ < 2) {
 		ret = goodix_i2c_read(client, GOODIX_REG_CONFIG_DATA,
 				      &test, 1);
-		if (ret > 0)
+		if (ret >= 0)
 			return ret;
 
 		dev_err(&client->dev, "GTP i2c test failed time %d.", retry);
