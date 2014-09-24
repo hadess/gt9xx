@@ -383,7 +383,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 					goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT,
 					ts->client->name,
 					ts);
-	if (ret) {
+	if (ret < 0) {
 		dev_err(&ts->client->dev,
 			"Request IRQ failed! ERRNO: %d.", ret);
 		return ret;
