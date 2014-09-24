@@ -161,14 +161,14 @@ static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8 *coor_data)
 }
 
 /**
- * goodix_ts_work_func - Process incoming IRQ
+ * goodix_process_events - Process incoming events
  *
  * @ts: our goodix_ts_data pointer
  *
  * Called when the IRQ is triggered. Read the current device state, and push
  * the input events to the user space.
  */
-static void goodix_ts_work_func(struct goodix_ts_data *ts)
+static void goodix_process_events(struct goodix_ts_data *ts)
 {
 	u8  point_data[1 + 8 * GOODIX_MAX_TOUCH + 1];
 	int touch_num;
@@ -196,7 +196,7 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 	struct goodix_ts_data *ts = dev_id;
 	u8  end_cmd[1] = {0};
 
-	goodix_ts_work_func(ts);
+	goodix_process_events(ts);
 
 	if (goodix_i2c_write(ts->client,
 				GOODIX_READ_COOR_ADDR, end_cmd, 1) < 0)
