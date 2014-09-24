@@ -51,10 +51,10 @@ struct goodix_ts_data {
 
 static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 static const unsigned long goodix_irq_flags[] = {
-	IRQ_TYPE_EDGE_RISING  | IRQF_ONESHOT,
-	IRQ_TYPE_EDGE_FALLING | IRQF_ONESHOT,
-	IRQ_TYPE_LEVEL_LOW    | IRQF_ONESHOT,
-	IRQ_TYPE_LEVEL_HIGH   | IRQF_ONESHOT
+	IRQ_TYPE_EDGE_RISING,
+	IRQ_TYPE_EDGE_FALLING,
+	IRQ_TYPE_LEVEL_LOW,
+	IRQ_TYPE_LEVEL_HIGH,
 };
 
 /**
@@ -306,7 +306,7 @@ static int goodix_request_irq(struct goodix_ts_data *ts)
 	ret = devm_request_threaded_irq(&ts->client->dev,
 					ts->client->irq, NULL,
 					goodix_ts_irq_handler,
-					goodix_irq_flags[ts->int_trigger_type],
+					goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT,
 					ts->client->name,
 					ts);
 	if (ret) {
