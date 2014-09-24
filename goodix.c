@@ -294,32 +294,6 @@ static int goodix_i2c_test(struct i2c_client *client)
 }
 
 /**
- * goodix_request_irq - Request the IRQ handler
- *
- * @ts: our goodix_ts_data pointer
- *
- * Must be called during probe
- */
-static int goodix_request_irq(struct goodix_ts_data *ts)
-{
-	int ret;
-
-	ret = devm_request_threaded_irq(&ts->client->dev,
-					ts->client->irq, NULL,
-					goodix_ts_irq_handler,
-					goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT,
-					ts->client->name,
-					ts);
-	if (ret) {
-		dev_err(&ts->client->dev,
-			"Request IRQ failed! ERRNO: %d.", ret);
-		return -1;
-	}
-
-	return 0;
-}
-
-/**
  * goodix_request_input_dev - Allocate, populate and register the input device
  *
  * @ts: our goodix_ts_data pointer
@@ -403,9 +377,17 @@ static int goodix_ts_probe(struct i2c_client *client,
 		return ret;
 	}
 
-	ret = goodix_request_irq(ts);
-	if (ret < 0)
+	ret = devm_request_threaded_irq(&ts->client->dev,
+					ts->client->irq, NULL,
+					goodix_ts_irq_handler,
+					goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT,
+					ts->client->name,
+					ts);
+	if (ret) {
+		dev_err(&ts->client->dev,
+			"Request IRQ failed! ERRNO: %d.", ret);
 		return ret;
+	}
 
 	ret = goodix_read_version(client, &version_info);
 	if (ret < 0) {
