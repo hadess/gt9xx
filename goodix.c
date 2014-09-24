@@ -69,13 +69,13 @@ static int goodix_i2c_read(struct i2c_client *client,
 				u16 reg, u8 *buf, int len)
 {
 	struct i2c_msg msgs[2];
-	u8 wbuf[2] = { reg >> 8, reg & 0xff };
+	u16 wbuf = cpu_to_be16(reg);
 	int ret;
 
 	msgs[0].flags = 0;
 	msgs[0].addr  = client->addr;
 	msgs[0].len   = 2;
-	msgs[0].buf   = wbuf;
+	msgs[0].buf   = (u8 *) &wbuf;
 
 	msgs[1].flags = I2C_M_RD;
 	msgs[1].addr  = client->addr;
