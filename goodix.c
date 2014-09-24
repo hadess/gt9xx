@@ -100,13 +100,14 @@ static int goodix_i2c_write(struct i2c_client *client,
 	struct i2c_msg msg;
 	int ret;
 	u8 *wbuf;
+	u16 *addr;
 
 	wbuf = kzalloc(len + 2, GFP_KERNEL);
 	if (!buf)
 		return -ENOMEM;
 
-	wbuf[0] = reg >> 8;
-	wbuf[1] = reg & 0xFF;
+	addr = ((u16 *) &wbuf[0]);
+	*addr = cpu_to_be16(reg);
 	memcpy(&wbuf[2], buf, len);
 
 	msg.flags = 0;
