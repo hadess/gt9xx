@@ -392,14 +392,8 @@ static int goodix_ts_probe(struct i2c_client *client,
 
 	ret = goodix_i2c_test(client);
 	if (ret < 0) {
-		client->addr = 0x5d;
-		ret = goodix_i2c_test(client);
-		if (ret < 0) {
-			dev_err(&client->dev, "I2C communication ERROR!");
-			return -ENODEV;
-		}
-		dev_dbg(&client->dev,
-			"GTP I2C new Address: 0x%02x", client->addr);
+		dev_err(&client->dev, "I2C communication ERROR!");
+		return ret;
 	}
 
 	goodix_read_config(ts);
