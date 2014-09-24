@@ -253,7 +253,7 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
 
 	ret = goodix_i2c_read(client, GOODIX_REG_VERSION, buf, sizeof(buf));
 	if (ret < 0) {
-		dev_err(&client->dev, "GTP read version failed");
+		dev_err(&client->dev, "GOODIX read version failed");
 		return ret;
 	}
 
@@ -282,7 +282,7 @@ static int goodix_i2c_test(struct i2c_client *client)
 		if (ret >= 0)
 			return ret;
 
-		dev_err(&client->dev, "GTP i2c test failed time %d.", retry);
+		dev_err(&client->dev, "GOODIX i2c test failed time %d.", retry);
 		msleep(20);
 	}
 	return ret;
@@ -343,7 +343,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	dev_info(&client->dev, "GTP I2C Address: 0x%02x", client->addr);
+	dev_info(&client->dev, "GOODIX I2C Address: 0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		dev_err(&client->dev, "I2C check functionality failed.");
@@ -368,7 +368,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 
 	ret = goodix_request_input_dev(ts);
 	if (ret < 0) {
-		dev_err(&client->dev, "GTP request input dev failed");
+		dev_err(&client->dev, "GOODIX request input dev failed");
 		return ret;
 	}
 
