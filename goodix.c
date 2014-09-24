@@ -332,7 +332,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 	int ret;
 
 	ts->input_dev = devm_input_allocate_device(&ts->client->dev);
-	if (ts->input_dev == NULL) {
+	if (!ts->input_dev) {
 		dev_err(&ts->client->dev, "Failed to allocate input device.");
 		return -ENOMEM;
 	}
@@ -382,7 +382,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 		return -ENODEV;
 	}
 	ts = devm_kzalloc(&client->dev, sizeof(*ts), GFP_KERNEL);
-	if (ts == NULL) {
+	if (!ts) {
 		dev_err(&client->dev, "Alloc GFP_KERNEL memory failed.");
 		return -ENOMEM;
 	}
