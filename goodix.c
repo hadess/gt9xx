@@ -260,7 +260,7 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
 	if (version)
 		*version = get_unaligned_le16(&buf[4]);
 
-	dev_dbg(&client->dev, "IC VERSION: %6ph", buf);
+	dev_info(&client->dev, "IC VERSION: %6ph", buf);
 
 	return ret;
 }
@@ -343,7 +343,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	dev_dbg(&client->dev, "GTP I2C Address: 0x%02x", client->addr);
+	dev_info(&client->dev, "GTP I2C Address: 0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		dev_err(&client->dev, "I2C check functionality failed.");
