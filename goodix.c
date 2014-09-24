@@ -117,7 +117,7 @@ static int goodix_i2c_write(struct i2c_client *client,
 
 	ret = i2c_transfer(client->adapter, &msg, 1);
 	kfree(wbuf);
-	return ret < 0 ? ret : (ret != ARRAY_SIZE(msgs) ? -EIO : 0);
+	return ret < 0 ? ret : (ret != 1 ? -EIO : 0);
 }
 
 static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
