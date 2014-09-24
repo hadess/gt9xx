@@ -169,25 +169,19 @@ static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8 *coor_data)
  */
 static void goodix_ts_work_func(struct goodix_ts_data *ts)
 {
-	u8  end_cmd[1] = {0};
 	u8  point_data[1 + 8 * GOODIX_MAX_TOUCH + 1];
 	int touch_num;
 	int i;
 
 	touch_num = goodix_ts_read_input_report(ts, point_data);
 	if (touch_num < 0)
-		goto exit_work_func;
+		return;
 
 	for (i = 0; i < touch_num; i++)
 		goodix_ts_parse_touch(ts, &point_data[1 + 8 * i]);
 
 	input_mt_sync_frame(ts->input_dev);
 	input_sync(ts->input_dev);
-
-exit_work_func:
-	if (goodix_i2c_write(ts->client,
-				GOODIX_READ_COOR_ADDR, end_cmd, 1) < 0)
-		dev_err(&ts->client->dev, "I2C write end_cmd error");
 }
 
 /**
@@ -199,8 +193,13 @@ exit_work_func:
 static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 {
 	struct goodix_ts_data *ts = dev_id;
+	u8  end_cmd[1] = {0};
 
 	goodix_ts_work_func(ts);
+
+	if (goodix_i2c_write(ts->client,
+				GOODIX_READ_COOR_ADDR, end_cmd, 1) < 0)
+		dev_err(&ts->client->dev, "I2C write end_cmd error");
 
 	return IRQ_HANDLED;
 }
