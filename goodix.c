@@ -381,7 +381,8 @@ static int goodix_ts_probe(struct i2c_client *client,
 	ret = devm_request_threaded_irq(&ts->client->dev,
 					ts->client->irq, NULL,
 					goodix_ts_irq_handler,
-					goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT,
+					goodix_irq_flags[ts->int_trigger_type]
+						| IRQF_ONESHOT,
 					ts->client->name,
 					ts);
 	if (ret < 0) {
