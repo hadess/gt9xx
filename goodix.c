@@ -249,7 +249,6 @@ static void goodix_read_config(struct goodix_ts_data *ts)
 static int goodix_read_version(struct i2c_client *client, u16 *version)
 {
 	int ret;
-	int i;
 	u8 buf[6];
 
 	ret = goodix_i2c_read(client, GOODIX_REG_VERSION, buf, sizeof(buf));
@@ -261,12 +260,7 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
 	if (version)
 		*version = get_unaligned_le16(&buf[4]);
 
-	for (i = 0; i < 4; i++) {
-		if (!buf[i])
-			buf[i] = 0x30;
-	}
-	dev_dbg(&client->dev, "IC VERSION: %c%c%c%c_%02x%02x",
-			  buf[0], buf[1], buf[2], buf[3], buf[5], buf[4]);
+	dev_dbg(&client->dev, "IC VERSION: %6ph", buf);
 
 	return ret;
 }
