@@ -396,8 +396,6 @@ static int goodix_ts_probe(struct i2c_client *client,
 		return ret;
 	}
 
-	enable_irq(ts->client->irq);
-
 	return 0;
 }
 
