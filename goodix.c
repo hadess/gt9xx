@@ -362,7 +362,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 	if (ret) {
 		dev_err(&ts->client->dev, "Failed to register %s input device",
 			  ts->input_dev->name);
-		return -ENODEV;
+		return ret;
 	}
 
 	return 0;
