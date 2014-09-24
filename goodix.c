@@ -70,6 +70,7 @@ static int goodix_i2c_read(struct i2c_client *client,
 {
 	struct i2c_msg msgs[2];
 	u8 wbuf[2] = { reg >> 8, reg & 0xff };
+	int ret;
 
 	msgs[0].flags = 0;
 	msgs[0].addr  = client->addr;
@@ -81,7 +82,8 @@ static int goodix_i2c_read(struct i2c_client *client,
 	msgs[1].len   = len;
 	msgs[1].buf   = buf;
 
-	return i2c_transfer(client->adapter, msgs, 2);
+	ret = i2c_transfer(client->adapter, msgs, 2);
+	return ret < 0 ? ret : (ret != ARRAY_SIZE(msgs) ? -EIO : 0);
 }
 
 /**
