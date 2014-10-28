@@ -221,13 +221,13 @@ static void goodix_read_config(struct goodix_ts_data *ts)
  */
 static int goodix_read_version(struct i2c_client *client, u16 *version)
 {
-	int ret;
+	int error;
 	u8 buf[6];
 
-	ret = goodix_i2c_read(client, GOODIX_REG_VERSION, buf, sizeof(buf));
-	if (ret < 0) {
-		dev_err(&client->dev, "read version failed");
-		return ret;
+	error = goodix_i2c_read(client, GOODIX_REG_VERSION, buf, sizeof(buf));
+	if (error) {
+		dev_err(&client->dev, "read version failed: %d\n", error);
+		return error;
 	}
 
 	if (version)
@@ -235,7 +235,7 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
 
 	dev_info(&client->dev, "IC VERSION: %6ph", buf);
 
-	return ret;
+	return 0;
 }
 
 /**
