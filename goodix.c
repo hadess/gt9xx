@@ -86,40 +86,6 @@ static int goodix_i2c_read(struct i2c_client *client,
 	return ret < 0 ? ret : (ret != ARRAY_SIZE(msgs) ? -EIO : 0);
 }
 
-/**
- * goodix_i2c_write - write data to the i2c slave device.
- *
- * @client: i2c device.
- * @reg: the register to read to.
- * @buf: raw write data buffer.
- * @len: length of the buffer to write
- */
-static int goodix_i2c_write(struct i2c_client *client,
-				u16 reg, u8 *buf, int len)
-{
-	struct i2c_msg msg;
-	int ret;
-	u8 *wbuf;
-	u16 *addr;
-
-	wbuf = kzalloc(len + 2, GFP_KERNEL);
-	if (!buf)
-		return -ENOMEM;
-
-	addr = ((u16 *) &wbuf[0]);
-	*addr = cpu_to_be16(reg);
-	memcpy(&wbuf[2], buf, len);
-
-	msg.flags = 0;
-	msg.addr  = client->addr;
-	msg.len   = len + 2;
-	msg.buf   = wbuf;
-
-	ret = i2c_transfer(client->adapter, &msg, 1);
-	kfree(wbuf);
-	return ret < 0 ? ret : (ret != 1 ? -EIO : 0);
-}
-
 static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 {
 	int touch_num;
@@ -201,13 +167,16 @@ static void goodix_process_events(struct goodix_ts_data *ts)
  */
 static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 {
+	static const u8 end_cmd[] = {
+		GOODIX_READ_COOR_ADDR >> 8,
+		GOODIX_READ_COOR_ADDR & 0xff,
+		0
+	};
 	struct goodix_ts_data *ts = dev_id;
-	u8  end_cmd[1] = {0};
 
 	goodix_process_events(ts);
 
-	if (goodix_i2c_write(ts->client,
-				GOODIX_READ_COOR_ADDR, end_cmd, 1) < 0)
+	if (i2c_master_send(ts->client, end_cmd, sizeof(end_cmd)) < 0)
 		dev_err(&ts->client->dev, "I2C write end_cmd error");
 
 	return IRQ_HANDLED;
