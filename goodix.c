@@ -147,7 +147,8 @@ static void goodix_process_events(struct goodix_ts_data *ts)
 		return;
 
 	for (i = 0; i < touch_num; i++)
-		goodix_ts_report_touch(ts, &point_data[1 + 8 * i]);
+		goodix_ts_report_touch(ts,
+				&point_data[1 + GOODIX_CONTACT_SIZE * i]);
 
 	input_mt_sync_frame(ts->input_dev);
 	input_sync(ts->input_dev);
