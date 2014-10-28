@@ -37,7 +37,8 @@ struct goodix_ts_data {
 #define GOODIX_MAX_HEIGHT		4096
 #define GOODIX_MAX_WIDTH		4096
 #define GOODIX_INT_TRIGGER		1
-#define GOODIX_MAX_TOUCH		10
+#define GOODIX_CONTACT_SIZE		8
+#define GOODIX_MAX_CONTACTS		10
 
 #define GOODIX_CONFIG_MAX_LENGTH	240
 
@@ -97,7 +98,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	}
 
 	touch_num = data[0] & 0x0f;
-	if (touch_num > GOODIX_MAX_TOUCH)
+	if (touch_num > GOODIX_MAX_CONTACTS)
 		return -EPROTO;
 
 	if (touch_num > 1) {
@@ -135,7 +136,7 @@ static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8 *coor_data)
  */
 static void goodix_process_events(struct goodix_ts_data *ts)
 {
-	u8  point_data[1 + 8 * GOODIX_MAX_TOUCH + 1];
+	u8  point_data[1 + GOODIX_CONTACT_SIZE * GOODIX_MAX_CONTACTS + 1];
 	int touch_num;
 	int i;
 
@@ -284,7 +285,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 	input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
 
-	input_mt_init_slots(ts->input_dev, GOODIX_MAX_TOUCH,
+	input_mt_init_slots(ts->input_dev, GOODIX_MAX_CONTACTS,
 			    INPUT_MT_DIRECT | INPUT_MT_DROP_UNUSED);
 
 	ts->input_dev->name = "Goodix Capacitive TouchScreen";
