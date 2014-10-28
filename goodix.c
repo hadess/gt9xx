@@ -113,7 +113,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	return touch_num;
 }
 
-static void goodix_ts_parse_touch(struct goodix_ts_data *ts, u8 *coor_data)
+static void goodix_ts_report_touch(struct goodix_ts_data *ts, u8 *coor_data)
 {
 	int id = coor_data[0] & 0x0F;
 	int input_x = get_unaligned_le16(&coor_data[1]);
@@ -147,7 +147,7 @@ static void goodix_process_events(struct goodix_ts_data *ts)
 		return;
 
 	for (i = 0; i < touch_num; i++)
-		goodix_ts_parse_touch(ts, &point_data[1 + 8 * i]);
+		goodix_ts_report_touch(ts, &point_data[1 + 8 * i]);
 
 	input_mt_sync_frame(ts->input_dev);
 	input_sync(ts->input_dev);
