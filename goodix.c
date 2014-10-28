@@ -91,6 +91,7 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 	int touch_num;
 	int error;
 
+	/* XXX should we read GOODIX_CONTACT_SIZE + 1 (i.e. 9) instead of 10? */
 	error = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR, data, 10);
 	if (error) {
 		dev_err(&ts->client->dev, "I2C transfer error: %d\n", error);
@@ -102,9 +103,12 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 		return -EPROTO;
 
 	if (touch_num > 1) {
+		data += 10;
+		// data += GOODIX_CONTACT_SIZE + 1
 		error = goodix_i2c_read(ts->client,
 					GOODIX_READ_COOR_ADDR + 10,
-					&data[10],
+					// GOODIX_READ_COOR_ADDR + 1 + GOODIX_CONTACT_SIZE ???
+					data,
 					GOODIX_CONTACT_SIZE * (touch_num - 1));
 		if (error)
 			return error;
@@ -138,6 +142,7 @@ static void goodix_ts_report_touch(struct goodix_ts_data *ts, u8 *coor_data)
  */
 static void goodix_process_events(struct goodix_ts_data *ts)
 {
+	// XXX why extra +1 ?
 	u8  point_data[1 + GOODIX_CONTACT_SIZE * GOODIX_MAX_CONTACTS + 1];
 	int touch_num;
 	int i;
