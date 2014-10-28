@@ -89,12 +89,12 @@ static int goodix_i2c_read(struct i2c_client *client,
 static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 {
 	int touch_num;
-	int ret;
+	int error;
 
-	ret = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR, data, 10);
-	if (ret < 0) {
-		dev_err(&ts->client->dev, "I2C transfer error (%d)\n", ret);
-		return ret;
+	error = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR, data, 10);
+	if (error) {
+		dev_err(&ts->client->dev, "I2C transfer error: %d\n", error);
+		return error;
 	}
 
 	touch_num = data[0] & 0x0f;
@@ -102,10 +102,12 @@ static int goodix_ts_read_input_report(struct goodix_ts_data *ts, u8 *data)
 		return -EPROTO;
 
 	if (touch_num > 1) {
-		ret = goodix_i2c_read(ts->client, GOODIX_READ_COOR_ADDR + 10,
-				   &data[10], 8 * (touch_num - 1));
-		if (ret < 0)
-			return ret;
+		error = goodix_i2c_read(ts->client,
+					GOODIX_READ_COOR_ADDR + 10,
+					&data[10],
+					GOODIX_CONTACT_SIZE * (touch_num - 1));
+		if (error)
+			return error;
 	}
 
 	return touch_num;
