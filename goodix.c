@@ -336,7 +336,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 }
 
 static int goodix_ts_probe(struct i2c_client *client,
-		const struct i2c_device_id *id)
+			   const struct i2c_device_id *id)
 {
 	int ret;
 	struct goodix_ts_data *ts;
@@ -348,6 +348,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 		dev_err(&client->dev, "I2C check functionality failed.");
 		return -ENODEV;
 	}
+
 	ts = devm_kzalloc(&client->dev, sizeof(*ts), GFP_KERNEL);
 	if (!ts) {
 		dev_err(&client->dev, "Alloc GFP_KERNEL memory failed.");
