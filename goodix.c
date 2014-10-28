@@ -414,7 +414,6 @@ static struct i2c_driver goodix_ts_driver = {
 		.acpi_match_table = goodix_acpi_match,
 	},
 };
-
 module_i2c_driver(goodix_ts_driver);
 
 MODULE_AUTHOR("Benjamin Tissoires <benjamin.tissoires@gmail.com>");
