@@ -185,14 +185,16 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
  */
 static void goodix_read_config(struct goodix_ts_data *ts)
 {
-	int ret;
 	u8 config[GOODIX_CONFIG_MAX_LENGTH];
+	int error;
 
-	ret = goodix_i2c_read(ts->client, GOODIX_REG_CONFIG_DATA, config,
+	error = goodix_i2c_read(ts->client, GOODIX_REG_CONFIG_DATA,
+			      config,
 			   GOODIX_CONFIG_MAX_LENGTH);
-	if (ret < 0) {
-		dev_err(&ts->client->dev,
-			"Error reading config, use default value!");
+	if (error) {
+		dev_warn(&ts->client->dev,
+			 "Error reading config (%d), using defaults\n",
+			 error);
 		ts->abs_x_max = GOODIX_MAX_WIDTH;
 		ts->abs_y_max = GOODIX_MAX_HEIGHT;
 		ts->int_trigger_type = GOODIX_INT_TRIGGER;
@@ -202,9 +204,9 @@ static void goodix_read_config(struct goodix_ts_data *ts)
 	ts->abs_x_max = get_unaligned_le16(&config[RESOLUTION_LOC]);
 	ts->abs_y_max = get_unaligned_le16(&config[RESOLUTION_LOC + 2]);
 	ts->int_trigger_type = (config[TRIGGER_LOC]) & 0x03;
-	if ((!ts->abs_x_max) || (!ts->abs_y_max)) {
+	if (!ts->abs_x_max || !ts->abs_y_max) {
 		dev_err(&ts->client->dev,
-			"Invalid config, use default value!");
+			"Invalid config, using defaults\n");
 		ts->abs_x_max = GOODIX_MAX_WIDTH;
 		ts->abs_y_max = GOODIX_MAX_HEIGHT;
 	}
