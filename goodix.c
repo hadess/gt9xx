@@ -49,7 +49,6 @@ struct goodix_ts_data {
 #define RESOLUTION_LOC		1
 #define TRIGGER_LOC		6
 
-static const char *goodix_ts_name = "Goodix Capacitive TouchScreen";
 static const unsigned long goodix_irq_flags[] = {
 	IRQ_TYPE_EDGE_RISING,
 	IRQ_TYPE_EDGE_FALLING,
@@ -319,7 +318,7 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 	input_mt_init_slots(ts->input_dev, GOODIX_MAX_TOUCH,
 			    INPUT_MT_DIRECT | INPUT_MT_DROP_UNUSED);
 
-	ts->input_dev->name = goodix_ts_name;
+	ts->input_dev->name = "Goodix Capacitive TouchScreen";
 	ts->input_dev->phys = "input/ts";
 	ts->input_dev->id.bustype = BUS_I2C;
 	ts->input_dev->id.vendor = 0x0416;
