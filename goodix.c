@@ -272,7 +272,7 @@ static int goodix_i2c_test(struct i2c_client *client)
  */
 static int goodix_request_input_dev(struct goodix_ts_data *ts)
 {
-	int ret;
+	int error;
 
 	ts->input_dev = devm_input_allocate_device(&ts->client->dev);
 	if (!ts->input_dev) {
@@ -301,11 +301,11 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 	ts->input_dev->id.product = 0x1001;
 	ts->input_dev->id.version = 10427;
 
-	ret = input_register_device(ts->input_dev);
-	if (ret) {
-		dev_err(&ts->client->dev, "Failed to register %s input device",
-			  ts->input_dev->name);
-		return ret;
+	error = input_register_device(ts->input_dev);
+	if (error) {
+		dev_err(&ts->client->dev,
+			"Failed to register input device: %d", error);
+		return error;
 	}
 
 	return 0;
