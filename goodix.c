@@ -314,57 +314,50 @@ static int goodix_request_input_dev(struct goodix_ts_data *ts)
 static int goodix_ts_probe(struct i2c_client *client,
 			   const struct i2c_device_id *id)
 {
-	int ret;
 	struct goodix_ts_data *ts;
+	unsigned long irq_flags;
+	int error;
 	u16 version_info;
 
 	dev_dbg(&client->dev, "I2C Address: 0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
-		dev_err(&client->dev, "I2C check functionality failed.");
-		return -ENODEV;
+		dev_err(&client->dev, "I2C check functionality failed.\n");
+		return -ENXIO;
 	}
 
 	ts = devm_kzalloc(&client->dev, sizeof(*ts), GFP_KERNEL);
-	if (!ts) {
-		dev_err(&client->dev, "Alloc GFP_KERNEL memory failed.");
+	if (!ts)
 		return -ENOMEM;
-	}
 
 	ts->client = client;
 	i2c_set_clientdata(client, ts);
 
-	ret = goodix_i2c_test(client);
-	if (ret < 0) {
-		dev_err(&client->dev, "I2C communication ERROR!");
-		return ret;
+	error = goodix_i2c_test(client);
+	if (error) {
+		dev_err(&client->dev, "I2C communication failure: %d\n", error);
+		return error;
+	}
+
+	error = goodix_read_version(client, &version_info);
+	if (error) {
+		dev_err(&client->dev, "Read version failed.");
+		return error;
 	}
 
 	goodix_read_config(ts);
 
-	ret = goodix_request_input_dev(ts);
-	if (ret < 0) {
-		dev_err(&client->dev, "request input dev failed");
-		return ret;
-	}
+	error = goodix_request_input_dev(ts);
+	if (error)
+		return error;
 
-	ret = devm_request_threaded_irq(&ts->client->dev,
-					ts->client->irq, NULL,
-					goodix_ts_irq_handler,
-					goodix_irq_flags[ts->int_trigger_type]
-						| IRQF_ONESHOT,
-					ts->client->name,
-					ts);
-	if (ret < 0) {
-		dev_err(&ts->client->dev,
-			"Request IRQ failed! ERRNO: %d.", ret);
-		return ret;
-	}
-
-	ret = goodix_read_version(client, &version_info);
-	if (ret < 0) {
-		dev_err(&client->dev, "Read version failed.");
-		return ret;
+	irq_flags = goodix_irq_flags[ts->int_trigger_type] | IRQF_ONESHOT;
+	error = devm_request_threaded_irq(&ts->client->dev, client->irq,
+					  NULL, goodix_ts_irq_handler,
+					  irq_flags, client->name, ts);
+	if (error) {
+		dev_err(&client->dev, "request IRQ failed: %d.", error);
+		return error;
 	}
 
 	return 0;
