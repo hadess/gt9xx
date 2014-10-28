@@ -311,7 +311,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 	struct goodix_ts_data *ts;
 	u16 version_info;
 
-	dev_info(&client->dev, "I2C Address: 0x%02x", client->addr);
+	dev_dbg(&client->dev, "I2C Address: 0x%02x", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		dev_err(&client->dev, "I2C check functionality failed.");
