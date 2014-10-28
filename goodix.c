@@ -41,7 +41,7 @@ struct goodix_ts_data {
 
 #define GOODIX_CONFIG_MAX_LENGTH	240
 
-/* Register defineS */
+/* Register defines */
 #define GOODIX_READ_COOR_ADDR		0x814E
 #define GOODIX_REG_CONFIG_DATA		0x8047
 #define GOODIX_REG_VERSION		0x8140
