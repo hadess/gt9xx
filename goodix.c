@@ -245,20 +245,22 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
  */
 static int goodix_i2c_test(struct i2c_client *client)
 {
-	u8 test;
-	int ret;
 	int retry = 0;
+	int error;
+	u8 test;
 
 	while (retry++ < 2) {
-		ret = goodix_i2c_read(client, GOODIX_REG_CONFIG_DATA,
-				      &test, 1);
-		if (ret >= 0)
-			return ret;
+		error = goodix_i2c_read(client, GOODIX_REG_CONFIG_DATA,
+					&test, 1);
+		if (!error)
+			return 0;
 
-		dev_err(&client->dev, "i2c test failed time %d.", retry);
+		dev_err(&client->dev, "i2c test failed attempt %d: %d\n",
+			retry, error);
 		msleep(20);
 	}
-	return ret;
+
+	return error;
 }
 
 /**
