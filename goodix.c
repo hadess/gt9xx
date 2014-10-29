@@ -175,7 +175,7 @@ static irqreturn_t goodix_ts_irq_handler(int irq, void *dev_id)
 	goodix_process_events(ts);
 
 	if (i2c_master_send(ts->client, end_cmd, sizeof(end_cmd)) < 0)
-		dev_err(&ts->client->dev, "I2C write end_cmd error");
+		dev_err(&ts->client->dev, "I2C write end_cmd error\n");
 
 	return IRQ_HANDLED;
 }
@@ -237,7 +237,7 @@ static int goodix_read_version(struct i2c_client *client, u16 *version)
 	if (version)
 		*version = get_unaligned_le16(&buf[4]);
 
-	dev_info(&client->dev, "IC VERSION: %6ph", buf);
+	dev_info(&client->dev, "IC VERSION: %6ph\n", buf);
 
 	return 0;
 }
@@ -323,7 +323,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 	int error;
 	u16 version_info;
 
-	dev_dbg(&client->dev, "I2C Address: 0x%02x", client->addr);
+	dev_dbg(&client->dev, "I2C Address: 0x%02x\n", client->addr);
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		dev_err(&client->dev, "I2C check functionality failed.\n");
@@ -345,7 +345,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 
 	error = goodix_read_version(client, &version_info);
 	if (error) {
-		dev_err(&client->dev, "Read version failed.");
+		dev_err(&client->dev, "Read version failed.\n");
 		return error;
 	}
 
@@ -360,7 +360,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 					  NULL, goodix_ts_irq_handler,
 					  irq_flags, client->name, ts);
 	if (error) {
-		dev_err(&client->dev, "request IRQ failed: %d.", error);
+		dev_err(&client->dev, "request IRQ failed: %d.\n", error);
 		return error;
 	}
 
