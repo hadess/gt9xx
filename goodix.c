@@ -1,5 +1,5 @@
 /*
- *  driver for Goodix Touchscreens
+ *  Driver for Goodix Touchscreens
  *
  *  Copyright (c) 2014 Red Hat Inc.
  *
@@ -360,7 +360,7 @@ static int goodix_ts_probe(struct i2c_client *client,
 					  NULL, goodix_ts_irq_handler,
 					  irq_flags, client->name, ts);
 	if (error) {
-		dev_err(&client->dev, "request IRQ failed: %d.\n", error);
+		dev_err(&client->dev, "request IRQ failed: %d\n", error);
 		return error;
 	}
 
