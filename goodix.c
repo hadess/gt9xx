@@ -14,21 +14,22 @@
  * Software Foundation; version 2 of the License.
  */
 
-#include <linux/kernel.h>
-#include <linux/dmi.h>
+#include <linux/pm_runtime.h>
+#include <linux/interrupt.h>
 #include <linux/firmware.h>
-#include <linux/gpio.h>
-#include <linux/i2c.h>
-#include <linux/input.h>
 #include <linux/input/mt.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/delay.h>
-#include <linux/irq.h>
-#include <linux/interrupt.h>
-#include <linux/slab.h>
+#include <linux/input.h>
 #include <linux/acpi.h>
+#include <linux/gpio.h>
+#include <linux/slab.h>
+#include <linux/dmi.h>
+#include <linux/i2c.h>
+#include <linux/irq.h>
 #include <linux/of.h>
-#include <linux/pm_runtime.h>
+
 #include <asm/unaligned.h>
 
 struct goodix_ts_data {
