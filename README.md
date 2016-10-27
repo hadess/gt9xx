@@ -10,3 +10,6 @@ changes.
 
 New features, and bug reports should be made using the usual kernel
 development process, through the linux-input@ mailing-list.
+
+The code is under the same license as the Linux kernel itself. See
+COPYING file for details.
